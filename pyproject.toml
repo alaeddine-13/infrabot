@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "easycloud"
+version = "0.1.0"
+description = "Create resource on the cloud with natural language"
+readme = "README.rst"
+authors = [
+  {name = "Alaeddine Abdessalem", email = "alaeddine.abdessalem@gmail.com"}
+]
+maintainers = [
+  {name = "Alaeddine Abdessalem", email = "alaeddine.abdessalem@gmail.com"}
+]
+classifiers = [
+
+]
+license = {text = "MIT license"}
+dependencies = [
+  "typer"
+]
+
+[tool.poetry]
+name = "easycloud"
+version = "0.1.0"
+description = "Create resource on the cloud with natural language"
+authors = ["Alaeddine Abdessalem <alaeddine.abdessalem@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">3.10"  # Replace with your Python version
+typer = "^0.12.5"
+click = "^8.1.7"
+openai = "^1.53.0"
+
+[project.optional-dependencies]
+dev = [
+    "coverage",  # testing
+    "mypy",  # linting
+    "pytest",  # testing
+    "ruff"  # linting
+]
+
+[project.urls]
+
+bugs = "https://github.com/alaeddine-13/easycloud/issues"
+changelog = "https://github.com/alaeddine-13/easycloud/blob/master/changelog.md"
+homepage = "https://github.com/alaeddine-13/easycloud"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+"*" = ["*.*"]
+
+
+
+
+# Mypy
+# ----
+
+[tool.mypy]
+files = "."
+
+# Use strict defaults
+strict = true
+warn_unreachable = true
+warn_no_return = true
+
+[[tool.mypy.overrides]]
+# Don't require test functions to include types
+module = "tests.*"
+allow_untyped_defs = true
+disable_error_code = "attr-defined"
+
+[project.scripts]
+easycloud = "easycloud.cli:app"
