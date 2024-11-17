@@ -1,9 +1,9 @@
 """Console script for easycloud."""
+from typing import Optional
+
 from rich.live import Live
 from rich.spinner import Spinner
 from rich import print as rprint
-
-import easycloud
 
 import typer
 from rich.console import Console
@@ -12,11 +12,20 @@ from easycloud.ai.terraform_generator import gen_terraform
 from easycloud.utils.parsing import extract_code_blocks
 
 app = typer.Typer()
+component_app = typer.Typer(help="Manage components in EasyCloud")
+
+app.add_typer(component_app, name="component")
 console = Console()
 
+# Sub-commands for "component"
 
-@app.command()
-def main(
+@app.command("init")
+def init_project():
+    """Initialize a new project."""
+    rprint(f"[bold green]Project initialized successfully![/bold green]")
+
+@component_app.command("create")
+def create_component(
     prompt: str = typer.Option(
         ...,
         "--prompt", "-p",
@@ -24,7 +33,7 @@ def main(
         prompt="Please enter your prompt"
     )
 ):
-    """Console script for easycloud."""
+    """Create a new component."""
     # Create a spinner
     spinner = Spinner("dots", text="Generating Terraform resources...")
 
@@ -43,6 +52,27 @@ def main(
     console.print(terraform_code, style="blue")
     rprint(f"\n[bold green]Remarks:[/bold green]")
     console.print(remarks, style="blue")
+
+@component_app.command("delete")
+def delete_component(
+    component_name: str = typer.Argument(..., help="Name of the component to delete")
+):
+    """Delete a component."""
+    rprint(f"[bold red]Component '{component_name}' deleted successfully![/bold red]")
+
+@component_app.command("edit")
+def edit_component(
+    component_name: str = typer.Argument(..., help="Name of the component to edit")
+):
+    """Edit a component."""
+    rprint(f"[bold red]Component '{component_name}' edited successfully![/bold red]")
+
+@app.command(name="chat")
+def chat(
+    component_name: Optional[str] = typer.Argument(..., help="Name of the component to chat about")
+):
+    """Chat with your cloud using EasyCloud."""
+    rprint(f"[bold red]Component '{component_name}' chatted with successfully![/bold red]")
 
 
 
