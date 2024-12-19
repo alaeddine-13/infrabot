@@ -1,41 +1,46 @@
-from openai import OpenAI
+"""Module for generating Terraform configurations using AI."""
+import logging
+from typing import Optional
+from easycloud.ai.config import get_openai_client, OPENAI_MODEL_CONFIG, TERRAFORM_SYSTEM_PROMPT
 
-SYSTEM_PROMPT = """
-You are a terraform developer, with focus on AWS cloud.
-When the user requests to create an AWS resource, translate his request to terraform infrastructure as code.
-Present all the resources under one file. Format the file like this:
-```terraform
-<your terraform code here>
-```
-Also present your remarks to the user, explicitly in this format:
-```remarks
-<your remarks to the user here>
-```
-Make sure that your terraform code handles all the dependencies to create the requested resource.
-"""
+logger = logging.getLogger(__name__)
 
+def gen_terraform(request: str) -> Optional[str]:
+    """
+    Generate Terraform configuration based on a natural language request.
+    
+    Args:
+        request: Natural language description of the desired infrastructure
+        
+    Returns:
+        Generated Terraform configuration as a string, or None if generation fails
+        
+    Raises:
+        Exception: If there's an error communicating with the OpenAI API
+    """
+    try:
+        client = get_openai_client()
+        config = OPENAI_MODEL_CONFIG["terraform"]
+        
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": TERRAFORM_SYSTEM_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": request,
+                }
+            ],
+            model=config["model"],
+            temperature=config["temperature"],
+        )
 
-
-client = OpenAI()
-
-
-def gen_terraform(request: str):
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT,
-            },
-            {
-                "role": "user",
-                "content": request,
-            }
-        ],
-        model="gpt-4o",
-    )
-
-    return chat_completion.choices[0].message.content
-
+        return chat_completion.choices[0].message.content
+    except Exception as e:
+        logger.error(f"Failed to generate Terraform configuration: {str(e)}", exc_info=True)
+        return None
 
 
 if __name__ == "__main__":
