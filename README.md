@@ -1,12 +1,11 @@
-# EasyCloud
+# 🚀 SkyBot
 
-![PyPI version](https://img.shields.io/pypi/v/easycloud.svg)
-![Travis CI](https://img.shields.io/travis/alaeddine-13/easycloud.svg)
-![Documentation Status](https://readthedocs.org/projects/easycloud/badge/?version=latest)
+![PyPI version](https://img.shields.io/pypi/v/skybot.svg)
+![Documentation Status](https://readthedocs.org/projects/skybot/badge/?version=latest)
 
 Create resource on the cloud with natural language using AI-powered Terraform generation
 
-## Features
+## 📖 Features
 
 * Natural language-based resource creation
 * Support for AWS cloud resources (S3 buckets, EC2 instances, etc.)
@@ -14,12 +13,12 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
 * Interactive chat interface for cloud resources
 * Support for multiple infrastructure components
 
-## Prerequisites
+## 🛠️ Prerequisites
 
 - Python 3.10 or higher
 - Required packages (to be installed via pip):
   ```bash
-  pip install easycloud
+  pip install skybot
   ```
 - Terraform installed:
   ```bash
@@ -34,61 +33,61 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
   export OPENAI_API_KEY='your_api_key_here'
   ```
 
-## Command Structure
+## 📚 Command Structure
 
 Initialize a new project:
 ```bash
-easycloud init [--verbose]
+skybot init [--verbose]
 ```
 
 Create a new component:
 ```bash
-easycloud component create --prompt "Your infrastructure description" --name component-name
+skybot component create --prompt "Your infrastructure description" --name component-name
 ```
 
 Delete a component:
 ```bash
-easycloud component delete --name component-name [--force]
+skybot component delete --name component-name [--force]
 ```
 
 Edit a component:
 ```bash
-easycloud component edit --name component-name
+skybot component edit --name component-name
 ```
 
 Chat about your infrastructure:
 ```bash
-easycloud chat --name component-name
+skybot chat --name component-name
 ```
 
-## Usage Examples
+## 📊 Usage Examples
 
 1. Initialize a new project:
 ```bash
-easycloud init
+skybot init
 ```
 
 2. Create a web server component:
 ```bash
-easycloud component create --prompt "Create an EC2 instance with nginx installed" --name web-server
+skybot component create --prompt "Create an EC2 instance with nginx installed" --name web-server
 ```
 
 3. Create a database component:
 ```bash
-easycloud component create --prompt "Set up an RDS instance for PostgreSQL" --name database
+skybot component create --prompt "Set up an RDS instance for PostgreSQL" --name database
 ```
 
 4. Chat about your infrastructure:
 ```bash
-easycloud chat web-server
+skybot chat web-server
 ```
 
-## Project Structure
+## 🗂️ Project Structure
 
-When you initialize a project, EasyCloud creates a `.easycloud` directory with the following structure:
+When you initialize a project, SkyBot creates a `.skybot` directory with the following structure:
 
 ```
-.easycloud/
+.skybot/
 └── default/
     ├── backend.tf
     ├── provider.tf

@@ -1,4 +1,4 @@
-"""Top-level package for EasyCloud."""
+"""Top-level package for SkyBot."""
 
 __author__ = """Alaeddine Abdessalem"""
 __email__ = 'alaeddine.abdessalem@gmail.com'

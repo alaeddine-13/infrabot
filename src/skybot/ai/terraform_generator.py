@@ -1,7 +1,7 @@
 """Module for generating Terraform configurations using AI."""
 import logging
 from typing import Optional
-from easycloud.ai.config import get_openai_client, OPENAI_MODEL_CONFIG, TERRAFORM_SYSTEM_PROMPT
+from skybot.ai.config import get_openai_client, OPENAI_MODEL_CONFIG, TERRAFORM_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 

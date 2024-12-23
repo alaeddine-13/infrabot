@@ -3,21 +3,21 @@ from typing import Optional
 from rich.spinner import Spinner
 from rich.live import Live
 
-from easycloud.infra_utils.terraform import TerraformWrapper
+from skybot.infra_utils.terraform import TerraformWrapper
 from rich import print as rprint
 
-from easycloud.utils.os import get_package_directory, copy_assets
-from easycloud.ai.chat import ChatSession
+from skybot.utils.os import get_package_directory, copy_assets
+from skybot.ai.chat import ChatSession
 
 
-def init_project(workdir: str = ".easycloud/default", verbose: bool=False):
+def init_project(workdir: str = ".skybot/default", verbose: bool=False):
     """Initialize a new project."""
 
-    # Ensure default directory exists inside .easycloud
+    # Ensure default directory exists inside .skybot
     os.makedirs(workdir, exist_ok=True)
 
     # Copy boilerplate assets from assets/ to workdir
-    package_dir = get_package_directory("easycloud")
+    package_dir = get_package_directory("skybot")
     assets_dir = os.path.join(package_dir, "../../assets/terraform/")
     copy_assets(assets_dir, workdir)
     rprint(f"[green] Initialized project directory ({workdir})[/green]")
@@ -41,7 +41,7 @@ def init_project(workdir: str = ".easycloud/default", verbose: bool=False):
     rprint(f"[bold green]Project initialized successfully[/bold green]")
 
 
-def start_chat_session(component_name: Optional[str] = None, workdir: str = ".easycloud/default"):
+def start_chat_session(component_name: Optional[str] = None, workdir: str = ".skybot/default"):
     """Start an interactive chat session about infrastructure components."""
     chat_session = ChatSession(workdir=workdir)
     chat_session.start_chat(component_name)

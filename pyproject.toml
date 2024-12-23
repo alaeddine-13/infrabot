@@ -3,10 +3,10 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "easycloud"
+name = "skybot"
 version = "0.1.0"
 description = "Create resource on the cloud with natural language"
-readme = "README.rst"
+readme = "README.md"
 authors = [
   {name = "Alaeddine Abdessalem", email = "alaeddine.abdessalem@gmail.com"}
 ]
@@ -22,10 +22,11 @@ dependencies = [
 ]
 
 [tool.poetry]
-name = "easycloud"
+name = "skybot"
 version = "0.1.0"
 description = "Create resource on the cloud with natural language"
 authors = ["Alaeddine Abdessalem <alaeddine.abdessalem@gmail.com>"]
+packages = [{include = "skybot", from = "src"}]
 
 [tool.poetry.dependencies]
 python = ">3.10"  # Replace with your Python version
@@ -43,15 +44,15 @@ dev = [
 
 [project.urls]
 
-bugs = "https://github.com/alaeddine-13/easycloud/issues"
-changelog = "https://github.com/alaeddine-13/easycloud/blob/master/changelog.md"
-homepage = "https://github.com/alaeddine-13/easycloud"
+bugs = "https://github.com/alaeddine-13/skybot/issues"
+changelog = "https://github.com/alaeddine-13/skybot/blob/master/changelog.md"
+homepage = "https://github.com/alaeddine-13/skybot"
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+#[tool.setuptools]
+#package-dir = {"" = "src"}
 
-[tool.setuptools.package-data]
-"*" = ["*.*"]
+#[tool.setuptools.package-data]
+#"*" = ["*.*"]
 
 
 
@@ -74,4 +75,4 @@ allow_untyped_defs = true
 disable_error_code = "attr-defined"
 
 [project.scripts]
-easycloud = "easycloud.cli:app"
+skybot = "skybot.cli:app"

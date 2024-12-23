@@ -1,6 +1,6 @@
 from typing import Optional
 import logging
-from easycloud.ai.config import get_openai_client, OPENAI_MODEL_CONFIG
+from skybot.ai.config import get_openai_client, OPENAI_MODEL_CONFIG
 
 logger = logging.getLogger(__name__)
 

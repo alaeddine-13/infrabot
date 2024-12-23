@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-"""Tests for `easycloud` package."""
+"""Tests for `skybot` package."""
 
 import pytest
 
 
-from easycloud import easycloud
+from skybot import skybot
 
 
 @pytest.fixture

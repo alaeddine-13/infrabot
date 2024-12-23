@@ -3,7 +3,7 @@ import os
 import sys
 
 def setup_logging(debug_mode=False):
-    """Configure logging for the easycloud package."""
+    """Configure logging for the skybot package."""
     log_level = logging.DEBUG if debug_mode else logging.INFO
     
     # Create formatter
@@ -16,7 +16,7 @@ def setup_logging(debug_mode=False):
     console_handler.setFormatter(formatter)
     
     # Configure root logger
-    root_logger = logging.getLogger('easycloud')
+    root_logger = logging.getLogger('skybot')
     root_logger.setLevel(log_level)
     root_logger.addHandler(console_handler)
     

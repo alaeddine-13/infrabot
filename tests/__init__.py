@@ -1,1 +1,1 @@
-"""Unit test package for easycloud."""
+"""Unit test package for skybot."""

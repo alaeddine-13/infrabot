@@ -1,4 +1,4 @@
-* EasyCloud version:
+* SkyBot version:
 * Python version:
 * Operating System:
 

@@ -5,7 +5,7 @@ import openai
 from rich import print as rprint
 
 class ChatSession:
-    def __init__(self, workdir: str = ".easycloud/default"):
+    def __init__(self, workdir: str = ".skybot/default"):
         self.workdir = workdir
         self.conversation_history: List[Dict] = []
         self.system_prompt = """You are an AI assistant specialized in cloud infrastructure and Terraform. 

@@ -1,4 +1,4 @@
-"""Console script for easycloud."""
+"""Console script for skybot."""
 import os
 from typing import Optional
 import re
@@ -11,18 +11,18 @@ from rich import print as rprint
 import typer
 from rich.console import Console
 
-from easycloud.ai.terraform_generator import gen_terraform
-from easycloud.infra_utils.terraform import TerraformWrapper
-from easycloud.utils.parsing import extract_code_blocks
-from easycloud import api
-from easycloud.utils.logging_config import setup_logging
-from easycloud.ai.summary import summarize_terraform_plan
+from skybot.ai.terraform_generator import gen_terraform
+from skybot.infra_utils.terraform import TerraformWrapper
+from skybot.utils.parsing import extract_code_blocks
+from skybot import api
+from skybot.utils.logging_config import setup_logging
+from skybot.ai.summary import summarize_terraform_plan
 
-WORKDIR = ".easycloud/default"
+WORKDIR = ".skybot/default"
 
 app = typer.Typer()
-component_app = typer.Typer(help="Manage components in EasyCloud")
-logger = logging.getLogger('easycloud.cli')
+component_app = typer.Typer(help="Manage components in SkyBot")
+logger = logging.getLogger('skybot.cli')
 
 app.add_typer(component_app, name="component")
 console = Console()
@@ -78,7 +78,7 @@ def create_component(
     # Check if project is already initialized
     if not os.path.exists(WORKDIR):
         logger.error("Project not initialized")
-        rprint("Project is not initialized. Run `easycloud init` first")
+        rprint("Project is not initialized. Run `skybot init` first")
         return
 
     # Create a spinner
@@ -157,7 +157,7 @@ def delete_component(
     # Check if project is initialized
     if not os.path.exists(WORKDIR):
         logger.error("Project not initialized")
-        rprint("Project is not initialized. Run `easycloud init` first")
+        rprint("Project is not initialized. Run `skybot init` first")
         return
 
     # Check if the component exists
@@ -224,7 +224,7 @@ def edit_component(
 def chat(
     component_name: Optional[str] = typer.Argument(..., help="Name of the component to chat about")
 ):
-    """Chat with your cloud using EasyCloud."""
+    """Chat with your cloud using SkyBot."""
     logger.debug(f"Chatting about component: {component_name}")
     rprint(f"[bold red]Component '{component_name}' chatted with successfully![/bold red]")
 
@@ -232,5 +232,5 @@ def chat(
 if __name__ == "__main__":
     # Initialize logging with debug mode set to True
     setup_logging(debug_mode=True)
-    logger.debug("Starting easycloud CLI")
+    logger.debug("Starting skybot CLI")
     app()

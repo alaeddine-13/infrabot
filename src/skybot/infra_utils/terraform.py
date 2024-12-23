@@ -2,7 +2,7 @@ import subprocess
 import logging
 from typing import Optional
 
-logger = logging.getLogger('easycloud.terraform')
+logger = logging.getLogger('skybot.terraform')
 
 class TerraformWrapper:
     def __init__(self, working_directory):
