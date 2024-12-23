@@ -15,6 +15,7 @@ from skybot.ai.terraform_generator import gen_terraform
 from skybot.infra_utils.terraform import TerraformWrapper
 from skybot.utils.parsing import extract_code_blocks
 from skybot import api
+from skybot import __version__
 from skybot.utils.logging_config import setup_logging
 from skybot.ai.summary import summarize_terraform_plan
 
@@ -227,6 +228,12 @@ def chat(
     """Chat with your cloud using SkyBot."""
     logger.debug(f"Chatting about component: {component_name}")
     rprint(f"[bold red]Component '{component_name}' chatted with successfully![/bold red]")
+
+
+@app.command("version")
+def version():
+    """Display the version of SkyBot."""
+    rprint(f"SkyBot version: {__version__}")
 
 
 if __name__ == "__main__":
