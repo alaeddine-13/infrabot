@@ -1,10 +1,9 @@
 """Configuration for AI services."""
-import os
 from typing import Dict
 from openai import OpenAI
 
-# OpenAI Configuration
-OPENAI_MODEL_CONFIG: Dict[str, Dict] = {
+# Model Configuration
+MODEL_CONFIG: Dict[str, Dict] = {
     "summary": {
         "model": "gpt-3.5-turbo",
         "temperature": 0.3,
@@ -13,6 +12,11 @@ OPENAI_MODEL_CONFIG: Dict[str, Dict] = {
     "terraform": {
         "model": "gpt-4o",
         "temperature": 0.7,
+    },
+    "chat": {
+        "model": "gpt-4o",
+        "temperature": 0.7,
+        "max_tokens": 1000
     }
 }
 

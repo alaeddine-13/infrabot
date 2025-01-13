@@ -33,6 +33,7 @@ python = ">3.10"  # Replace with your Python version
 typer = "^0.12.5"
 click = "^8.1.7"
 openai = "^1.53.0"
+litellm = "^1.57.1"
 
 [project.optional-dependencies]
 dev = [

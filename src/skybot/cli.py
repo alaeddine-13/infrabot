@@ -58,6 +58,10 @@ def create_component(
             "--verbose", "-v",
             help="Show detailed Terraform plan output"
         ),
+        model: str = typer.Option("gpt-4o",
+            "--model", "-m",
+            help="AI model to use for generation"
+        ),
     ):
     """Create a new component."""
     # Validate the component name
@@ -87,9 +91,9 @@ def create_component(
 
     # Use Live context to manage the spinner
     with Live(spinner, refresh_per_second=10) as live:
-        logger.debug(f"Generating terraform code for prompt: {prompt}")
+        logger.debug(f"Generating terraform code for prompt: {prompt} using model: {model}")
         # Generate terraform code
-        response = gen_terraform(prompt)
+        response = gen_terraform(prompt, model=model)
         terraform_code = extract_code_blocks(response, title="terraform")[0]
         remarks = extract_code_blocks(response, title="remarks")[0]
 
@@ -129,6 +133,7 @@ def create_component(
             rprint("[bold green]Changes applied successfully![/bold green]")
         else:
             logger.info("User declined to apply changes")
+            # TODO: actually this is not a good idea, because the user can do keyboard interrupt at this point
             # Rollback: delete the created Terraform file
             os.remove(tf_file_path)
             rprint("[bold red]Terraform changes not applied.[/bold red]")

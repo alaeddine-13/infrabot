@@ -1,6 +1,6 @@
 from typing import Optional
 import logging
-from skybot.ai.config import get_openai_client, OPENAI_MODEL_CONFIG
+from skybot.ai.config import get_openai_client, MODEL_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def summarize_terraform_plan(plan_output: str) -> Optional[str]:
     """
     try:
         client = get_openai_client()
-        config = OPENAI_MODEL_CONFIG["summary"]
+        config = MODEL_CONFIG["summary"]
         
         response = client.chat.completions.create(
             model=config["model"],

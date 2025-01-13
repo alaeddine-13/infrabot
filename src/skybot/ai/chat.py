@@ -1,12 +1,16 @@
 """Module for handling chat functionality with LLM."""
 import os
 from typing import Optional, List, Dict
-import openai
+from litellm import completion
 from rich import print as rprint
+from src.skybot.ai.config import MODEL_CONFIG
+
+default_model = MODEL_CONFIG["chat"]["model"]
 
 class ChatSession:
-    def __init__(self, workdir: str = ".skybot/default"):
+    def __init__(self, workdir: str = ".skybot/default", model: str = default_model):
         self.workdir = workdir
+        self.model = model
         self.conversation_history: List[Dict] = []
         self.system_prompt = """You are an AI assistant specialized in cloud infrastructure and Terraform. 
         Help users understand and work with their infrastructure components by providing clear, accurate information 
@@ -72,10 +76,10 @@ class ChatSession:
                 break
 
     def _get_ai_response(self) -> str:
-        """Get response from the AI model."""
+        """Get response from the AI model using LiteLLM."""
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            response = completion(
+                model=self.model,
                 messages=self.conversation_history,
                 temperature=0.7,
                 max_tokens=1000

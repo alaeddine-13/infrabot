@@ -1,28 +1,27 @@
 """Module for generating Terraform configurations using AI."""
 import logging
 from typing import Optional
-from skybot.ai.config import get_openai_client, OPENAI_MODEL_CONFIG, TERRAFORM_SYSTEM_PROMPT
+from litellm import completion
+from skybot.ai.config import MODEL_CONFIG, TERRAFORM_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
-def gen_terraform(request: str) -> Optional[str]:
+def gen_terraform(request: str, model: str = "gpt-4o") -> Optional[str]:
     """
     Generate Terraform configuration based on a natural language request.
-    
+
     Args:
         request: Natural language description of the desired infrastructure
-        
+        model: The LLM model to use (default: "gpt-4o")
+
     Returns:
         Generated Terraform configuration as a string, or None if generation fails
-        
-    Raises:
-        Exception: If there's an error communicating with the OpenAI API
     """
     try:
-        client = get_openai_client()
-        config = OPENAI_MODEL_CONFIG["terraform"]
+        config = MODEL_CONFIG["terraform"]
         
-        chat_completion = client.chat.completions.create(
+        response = completion(
+            model=model,
             messages=[
                 {
                     "role": "system",
@@ -33,11 +32,10 @@ def gen_terraform(request: str) -> Optional[str]:
                     "content": request,
                 }
             ],
-            model=config["model"],
             temperature=config["temperature"],
         )
 
-        return chat_completion.choices[0].message.content
+        return response.choices[0].message.content
     except Exception as e:
         logger.error(f"Failed to generate Terraform configuration: {str(e)}", exc_info=True)
         return None
