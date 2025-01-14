@@ -62,6 +62,10 @@ def create_component(
             "--model", "-m",
             help="AI model to use for generation"
         ),
+        force: bool = typer.Option(False,
+            "--force", "-f",
+            help="Skip confirmation and automatically apply changes"
+        ),
     ):
     """Create a new component."""
     # Validate the component name
@@ -122,8 +126,12 @@ def create_component(
             rprint("\nDetailed Terraform Plan:")
             rprint(plan_output)
 
-        # Ask for user approval to apply the changes
-        confirmation = typer.confirm("Do you want to apply these changes?", default=False)
+        # Skip confirmation if force flag is set
+        if force:
+            confirmation = True
+        else:
+            confirmation = typer.confirm("Do you want to apply these changes?", default=False)
+            
         if confirmation:
             # Apply the changes
             logger.debug("Applying terraform changes")
@@ -142,13 +150,88 @@ def create_component(
         rprint(f"An error occurred: {e}")
 
 
+def _validate_component_and_project(component_name: Optional[str] = None) -> tuple[list[str], Optional[str]]:
+    """Validate project initialization and component existence."""
+    if not os.path.exists(WORKDIR):
+        logger.error("Project not initialized")
+        rprint("Project is not initialized. Run `skybot init` first")
+        return [], None
+
+    if component_name:
+        tf_file_path = f"{WORKDIR}/{component_name}.tf"
+        if not os.path.exists(tf_file_path):
+            logger.error(f"Component not found: {component_name}")
+            rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
+            return [], None
+
+    # Get list of component files
+    components = [
+        file[:-3] for file in os.listdir(WORKDIR) 
+        if file.endswith(".tf") and not file.endswith("backend.tf") and not file.endswith("provider.tf")
+    ]
+    
+    return components, tf_file_path if component_name else None
+
+def _confirm_action(action: str, component_name: Optional[str], components: list[str], force: bool, action_description: str = "") -> bool:
+    """Get user confirmation for an action."""
+    if component_name is None:
+        message = f"Are you sure you want to {action} all components? {action_description}Components affected: {', '.join(components)}"
+    else:
+        message = f"Are you sure you want to {action} component '{component_name}'? {action_description}"
+
+    if force or typer.confirm(message, default=False):
+        return True
+    
+    logger.info(f"User cancelled {action}")
+    rprint(f"[yellow]{action.capitalize()} cancelled.[/yellow]")
+    return False
+
+@component_app.command("destroy")
+def destroy_component(
+    component_name: Optional[str] = typer.Option(
+        None,
+        "--name",
+        "-n",
+        help="Name of the component to destroy infrastructure for",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Force destruction without confirmation"
+    )
+):
+    """Destroy a component's cloud infrastructure while keeping its configuration."""
+    logger.debug(f"Destroying component infrastructure")
+    
+    components, _ = _validate_component_and_project(component_name)
+    if not components:
+        return
+
+    if not _confirm_action("destroy", component_name, components, force, "This action will remove resources while keeping their corresponding configuration."):
+        return
+
+    terraform_wrapper = TerraformWrapper(WORKDIR)
+    try:
+        with Live(Spinner("dots", text="Destroying infrastructure..."), refresh_per_second=10):
+            terraform_wrapper.destroy(component_name)
+        
+        if component_name:
+            rprint(f"[bold green]Infrastructure for component '{component_name}' has been successfully destroyed![/bold green]")
+        else:
+            rprint("[bold green]All infrastructure has been successfully destroyed![/bold green]")
+        
+    except Exception as e:
+        logger.error(f"Error destroying component infrastructure: {str(e)}")
+        rprint(f"[bold red]An error occurred while destroying the infrastructure: {str(e)}[/bold red]")
+
 @component_app.command("delete")
 def delete_component(
     component_name: Optional[str] = typer.Option(
         None,
         "--name",
         "-n",
-        help="Name of the component to delete",
+        help="Name of the component configuration to delete",
     ),
     force: bool = typer.Option(
         False,
@@ -157,46 +240,27 @@ def delete_component(
         help="Force deletion without confirmation"
     )
 ):
-    """Delete a component and its associated infrastructure."""
-    logger.debug(f"Deleting component")
+    """Delete a component's configuration file."""
+    logger.debug(f"Deleting component configuration")
     
     # Check if project is initialized
-    if not os.path.exists(WORKDIR):
-        logger.error("Project not initialized")
-        rprint("Project is not initialized. Run `skybot init` first")
+    components, tf_file_path = _validate_component_and_project(component_name)
+    if not components:
         return
 
-    # Check if the component exists
-    if component_name:
-        tf_file_path = f"{WORKDIR}/{component_name}.tf"
-        if not os.path.exists(tf_file_path):
-            logger.error(f"Component not found: {component_name}")
-            rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
-            return
-    components_to_delete = [
-        file[:-2] for file in os.listdir(WORKDIR) 
-        if file.endswith(".tf") and not file.endswith("backend.tf") and not file.endswith("provider.tf")
-    ]
+    # Check for existing infrastructure and warn user
+    terraform_wrapper = TerraformWrapper(WORKDIR)
 
     # Confirm deletion unless force flag is used
-    if component_name is None:
-        message = f"Are you sure you want to proceed ? This will delete all associated infrastructure. Components to be deleted: {', '.join(components_to_delete)}"
-    else:
-        message = f"Are you sure you want to delete component '{component_name}'? This will delete all associated infrastructure."
-
-    if not force and not typer.confirm(message, default=False):
-        logger.info("User cancelled deletion")
-        rprint("[yellow]Deletion cancelled.[/yellow]")
+    if not _confirm_action("delete", component_name, components, force, "This action will remove resources and their corresponding configuration."):
         return
 
-    terraform_wrapper = TerraformWrapper(WORKDIR)
-    
     try:
         # Run terraform destroy for the specific component
-        with Live(Spinner("dots", text=f"Deleting infrastructure'..."), refresh_per_second=10):
+        with Live(Spinner("dots", text=f"Destroying infrastructure'..."), refresh_per_second=10):
             terraform_wrapper.destroy(component_name)
         
-        
+
         if component_name:
             # Delete the Terraform file
             tf_file_path = f"{WORKDIR}/{component_name}.tf"
@@ -210,11 +274,11 @@ def delete_component(
                     tf_file_path = os.path.join(WORKDIR, file)
                     os.remove(tf_file_path)
                     logger.debug(f"Deleted terraform file: {tf_file_path}")
-            rprint("[bold green]All components and their infrastructure have been successfully deleted![/bold green]")
+            rprint("[bold green]All component configurations have been deleted![/bold green]")
         
     except Exception as e:
-        logger.error(f"Error deleting component: {str(e)}")
-        rprint(f"[bold red]An error occurred while deleting the component: {str(e)}[/bold red]")
+        logger.error(f"Error deleting component configuration: {str(e)}")
+        rprint(f"[bold red]An error occurred while deleting the configuration: {str(e)}[/bold red]")
 
 
 @component_app.command("edit")

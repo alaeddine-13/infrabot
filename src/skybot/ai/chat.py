@@ -3,7 +3,7 @@ import os
 from typing import Optional, List, Dict
 from litellm import completion
 from rich import print as rprint
-from src.skybot.ai.config import MODEL_CONFIG
+from skybot.ai.config import MODEL_CONFIG
 
 default_model = MODEL_CONFIG["chat"]["model"]
 
