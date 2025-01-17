@@ -36,10 +36,14 @@ def init_project(
         "--verbose", "-v",
         help="Show detailed initialization steps"
     ),
+    local: bool = typer.Option(False,
+        "--local", "-l",
+        help="Use localstack for infrastructure"
+    ),
 ):
     """Initialize a new project."""
     logger.debug("Initializing new project")
-    api.init_project(verbose=verbose)
+    api.init_project(verbose=verbose, local=local)
 
 @component_app.command("create")
 def create_component(

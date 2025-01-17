@@ -12,3 +12,5 @@ cookiecutter==2.6.0
 twine
 pandas
 openpyxl
+localstack
+awscli-local

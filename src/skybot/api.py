@@ -10,7 +10,7 @@ from skybot.utils.os import get_package_directory, copy_assets
 from skybot.ai.chat import ChatSession
 
 
-def init_project(workdir: str = ".skybot/default", verbose: bool=False):
+def init_project(workdir: str = ".skybot/default", verbose: bool=False, local: bool=False):
     """Initialize a new project."""
 
     # Ensure default directory exists inside .skybot
@@ -19,7 +19,7 @@ def init_project(workdir: str = ".skybot/default", verbose: bool=False):
     # Copy boilerplate assets from assets/ to workdir
     package_dir = get_package_directory("skybot")
     assets_dir = os.path.join(package_dir, "../../assets/terraform/")
-    copy_assets(assets_dir, workdir)
+    copy_assets(assets_dir, workdir, whitelist=["provider.tf" if not local else "provider_local.tf", "backend.tf"])
     rprint(f"[green] Initialized project directory ({workdir})[/green]")
 
     # Initialize Terraform in the default directory
