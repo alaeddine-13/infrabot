@@ -3,6 +3,7 @@ import os
 from typing import Optional
 import re
 import logging
+import warnings
 
 from rich.live import Live
 from rich.spinner import Spinner
@@ -18,6 +19,9 @@ from skybot import api
 from skybot import __version__
 from skybot.utils.logging_config import setup_logging
 from skybot.ai.summary import summarize_terraform_plan
+
+# Filter out the specific Pydantic warning
+warnings.filterwarnings("ignore", message="Valid config keys have changed in V2:*")
 
 WORKDIR = ".skybot/default"
 

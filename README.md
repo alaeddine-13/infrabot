@@ -9,6 +9,7 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
 
 * Natural language-based resource creation
 * Support for AWS cloud resources (S3 buckets, EC2 instances, etc.)
+* Local infrastructure development using LocalStack
 * Component-based infrastructure management
 * Interactive chat interface for cloud resources
 * Support for multiple infrastructure components
@@ -32,32 +33,47 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
   ```bash
   export OPENAI_API_KEY='your_api_key_here'
   ```
+- For local development:
+  ```bash
+  docker pull localstack/localstack
+  docker run -d -p 4566:4566 localstack/localstack
+  ```
 
 ## 📚 Command Structure
 
 Initialize a new project:
 ```bash
-skybot init [--verbose]
+skybot init [--verbose] [--local]
 ```
 
 Create a new component:
 ```bash
-skybot component create --prompt "Your infrastructure description" --name component-name
+skybot component create --prompt "Your infrastructure description" --name component-name [--verbose] [--force] [--model MODEL_NAME]
 ```
 
 Delete a component:
 ```bash
-skybot component delete --name component-name [--force]
+skybot component delete [--name component-name] [--force]
+```
+
+Destroy component infrastructure:
+```bash
+skybot component destroy [--name component-name] [--force]
 ```
 
 Edit a component:
 ```bash
-skybot component edit --name component-name
+skybot component edit component-name
 ```
 
 Chat about your infrastructure:
 ```bash
-skybot chat --name component-name
+skybot chat component-name
+```
+
+Check SkyBot version:
+```bash
+skybot version
 ```
 
 ## 📊 Usage Examples
@@ -72,12 +88,17 @@ skybot init
 skybot component create --prompt "Create an EC2 instance with nginx installed" --name web-server
 ```
 
-3. Create a database component:
+3. Create a local S3 bucket for testing:
+```bash
+skybot component create --prompt "Create an S3 bucket" --name test-bucket --local
+```
+
+4. Create a database component:
 ```bash
 skybot component create --prompt "Set up an RDS instance for PostgreSQL" --name database
 ```
 
-4. Chat about your infrastructure:
+5. Chat about your infrastructure:
 ```bash
 skybot chat web-server
 ```
