@@ -2,6 +2,7 @@
 
 ![PyPI version](https://img.shields.io/pypi/v/skybot.svg)
 ![Documentation Status](https://readthedocs.org/projects/skybot/badge/?version=latest)
+[![codecov](https://codecov.io/github/alaeddine-13/skybot/graph/badge.svg?token=XKIQV0FNC6)](https://codecov.io/github/alaeddine-13/skybot)
 
 Create resource on the cloud with natural language using AI-powered Terraform generation
 
