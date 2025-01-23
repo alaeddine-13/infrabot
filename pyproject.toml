@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "skybot"
@@ -17,9 +17,7 @@ classifiers = [
 
 ]
 license = {text = "MIT license"}
-dependencies = [
-  "typer"
-]
+dynamic = ["dependencies"]
 
 [tool.poetry]
 name = "skybot"
