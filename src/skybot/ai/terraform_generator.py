@@ -1,10 +1,12 @@
 """Module for generating Terraform configurations using AI."""
+
 import logging
 from typing import Optional
-from litellm import completion
+from skybot.ai.completion import completion
 from skybot.ai.config import MODEL_CONFIG, TERRAFORM_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
+
 
 def gen_terraform(request: str, model: str = "gpt-4o") -> Optional[str]:
     """
@@ -19,7 +21,7 @@ def gen_terraform(request: str, model: str = "gpt-4o") -> Optional[str]:
     """
     try:
         config = MODEL_CONFIG["terraform"]
-        
+
         response = completion(
             model=model,
             messages=[
@@ -30,14 +32,16 @@ def gen_terraform(request: str, model: str = "gpt-4o") -> Optional[str]:
                 {
                     "role": "user",
                     "content": request,
-                }
+                },
             ],
             temperature=config["temperature"],
         )
 
         return response.choices[0].message.content
     except Exception as e:
-        logger.error(f"Failed to generate Terraform configuration: {str(e)}", exc_info=True)
+        logger.error(
+            f"Failed to generate Terraform configuration: {str(e)}", exc_info=True
+        )
         return None
 
 
