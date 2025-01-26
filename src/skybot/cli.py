@@ -117,54 +117,67 @@ def create_component(
         # Update spinner text before stopping
         spinner.text = "Generation complete!"
 
-    # Save the generated Terraform code to a file named {name}.tf under workdir
-    logger.debug(f"Saving terraform code to: {tf_file_path}")
-    with open(tf_file_path, "w") as f:
-        f.write(terraform_code)
-    rprint(
-        f"[bold green]Terraform file saved successfully at {tf_file_path}[/bold green]"
-    )
-
     try:
-        # Run Terraform plan
-        logger.debug("Running terraform plan")
-        with Live(Spinner("dots", text="Generating a plan..."), refresh_per_second=10):
-            plan_output = terraform_wrapper.plan()
+        # Save the generated Terraform code to the file
+        logger.debug(f"Saving terraform code to: {tf_file_path}")
+        with open(tf_file_path, "w") as f:
+            f.write(terraform_code)
 
-        # Generate and display the plan summary regardless of verbose mode
-        summary = summarize_terraform_plan(plan_output)
-        if summary:
-            rprint("\n[bold]Plan Summary:[/bold]")
-            rprint(summary)
+        try:
+            # Run Terraform plan
+            logger.debug("Running terraform plan")
+            with Live(
+                Spinner("dots", text="Generating a plan..."), refresh_per_second=10
+            ):
+                plan_output = terraform_wrapper.plan()
 
-        if verbose:
-            rprint("\nDetailed Terraform Plan:")
-            rprint(plan_output)
+            # Generate and display the plan summary regardless of verbose mode
+            summary = summarize_terraform_plan(plan_output)
+            if summary:
+                rprint("\n[bold]Plan Summary:[/bold]")
+                rprint(summary)
 
-        # Skip confirmation if force flag is set
-        if force:
-            confirmation = True
-        else:
-            confirmation = typer.confirm(
-                "Do you want to apply these changes?", default=False
-            )
+            if verbose:
+                rprint("\nDetailed Terraform Plan:")
+                rprint(plan_output)
 
-        if confirmation:
-            # Apply the changes
-            logger.debug("Applying terraform changes")
-            with Live(Spinner("dots"), refresh_per_second=10) as live:
-                live.update("[yellow]Applying Terraform changes...[/yellow]")
-                terraform_wrapper.apply()
-            rprint("[bold green]Changes applied successfully![/bold green]")
-        else:
-            logger.info("User declined to apply changes")
-            # TODO: actually this is not a good idea, because the user can do keyboard interrupt at this point
-            # Rollback: delete the created Terraform file
+            # Skip confirmation if force flag is set
+            if force:
+                confirmation = True
+            else:
+                confirmation = typer.confirm(
+                    "Do you want to apply these changes?", default=False
+                )
+
+            if confirmation:
+                # Apply the changes
+                logger.debug("Applying terraform changes")
+                with Live(Spinner("dots"), refresh_per_second=10) as live:
+                    live.update("[yellow]Applying Terraform changes...[/yellow]")
+                    terraform_wrapper.apply()
+                rprint("[bold green]Changes applied successfully![/bold green]")
+                rprint(
+                    f"[bold green]Terraform file saved successfully at {tf_file_path}[/bold green]"
+                )
+            else:
+                logger.info("User declined to apply changes")
+                # Roll back by deleting the created file
+                os.remove(tf_file_path)
+                rprint("[bold red]Terraform changes not applied.[/bold red]")
+
+        except Exception as e:
+            # Roll back by deleting the created file
+            if os.path.exists(tf_file_path):
+                os.remove(tf_file_path)
+            logger.error(f"Error during terraform operations: {str(e)}")
+            rprint(f"An error occurred: {e}")
+            raise
+
+    except Exception:
+        # Ensure the file is deleted in case of any error
+        if os.path.exists(tf_file_path):
             os.remove(tf_file_path)
-            rprint("[bold red]Terraform changes not applied.[/bold red]")
-    except Exception as e:
-        logger.error(f"Error during terraform operations: {str(e)}")
-        rprint(f"An error occurred: {e}")
+        raise
 
 
 def _validate_component_and_project(
@@ -337,26 +350,26 @@ def delete_component(
         )
 
 
-@component_app.command("edit")
-def edit_component(
-    component_name: str = typer.Argument(..., help="Name of the component to edit"),
-):
-    """Edit a component."""
-    logger.debug(f"Editing component: {component_name}")
-    rprint(f"[bold red]Component '{component_name}' edited successfully![/bold red]")
+# @component_app.command("edit")
+# def edit_component(
+#     component_name: str = typer.Argument(..., help="Name of the component to edit"),
+# ):
+#     """Edit a component."""
+#     logger.debug(f"Editing component: {component_name}")
+#     rprint(f"[bold red]Component '{component_name}' edited successfully![/bold red]")
 
 
-@app.command(name="chat")
-def chat(
-    component_name: Optional[str] = typer.Argument(
-        ..., help="Name of the component to chat about"
-    ),
-):
-    """Chat with your cloud using SkyBot."""
-    logger.debug(f"Chatting about component: {component_name}")
-    rprint(
-        f"[bold red]Component '{component_name}' chatted with successfully![/bold red]"
-    )
+# @app.command(name="chat")
+# def chat(
+#     component_name: Optional[str] = typer.Argument(
+#         ..., help="Name of the component to chat about"
+#     ),
+# ):
+#     """Chat with your cloud using SkyBot."""
+#     logger.debug(f"Chatting about component: {component_name}")
+#     rprint(
+#         f"[bold red]Component '{component_name}' chatted with successfully![/bold red]"
+#     )
 
 
 @app.command("version")
