@@ -2,52 +2,36 @@
 
 import os
 import shutil
-import time
 import pytest
 from typer.testing import CliRunner
-from skybot.cli import app
 import subprocess
-from skybot.ai import terraform_generator, summary
 
+TERRAFORM_MOCK_RESPONSE = """
+```terraform
+resource "aws_s3_bucket" "mybucket" {
+  bucket = "mybucket"
 
-@pytest.fixture(scope="session")
-def localstack():
-    yield
-    return
-    """Start localstack container for testing."""
-    # Start localstack
-    subprocess.run(
-        "docker run -d --name skybot-test-localstack "
-        "-p 4566:4566 -p 4571:4571 "
-        "-e SERVICES=s3 "
-        "localstack/localstack:latest",
-        shell=True,
-        check=True,
-    )
+  # Enable versioning
+  versioning {
+    enabled = true
+  }
 
-    # Wait for localstack to be ready
-    max_retries = 30
-    for i in range(max_retries):
-        health_check = subprocess.run(
-            "curl http://localhost:4566/_localstack/health",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        if health_check.returncode == 0 and b'"s3": "running"' in health_check.stdout:
-            break
-        time.sleep(1)
-    else:
-        raise RuntimeError("Localstack failed to start")
-
-    yield
-
-    # Cleanup
-    subprocess.run(
-        "docker stop skybot-test-localstack && docker rm skybot-test-localstack",
-        shell=True,
-        check=True,
-    )
+  # Enable server-side encryption by default
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+```
+```remarks
+The above configuration will create an S3 bucket named "mybucket" with versioning enabled and server-side encryption using the AES256
+algorithm. Ensure that the bucket name "mybucket" is unique across all existing bucket names in AWS S3, as bucket names are globally unique.
+Adjust any additional settings like ACLs, policies, or lifecycle rules based on your specific needs.
+```
+"""
 
 
 @pytest.fixture
@@ -69,40 +53,31 @@ def temp_dir(tmp_path):
 
 
 @pytest.fixture
-def initialized_project(runner, temp_dir):
+def initialized_project(runner, temp_dir, monkeypatch):
     """Create an initialized project for testing."""
+
+    def mock_terraform(*args, **kwargs):
+        return TERRAFORM_MOCK_RESPONSE
+
+    def mock_summary(*args, **kwargs):
+        return "Created S3 bucket 'mybucket'"
+
+    # Use monkeypatch to replace the real function with our mock
+    monkeypatch.setattr("skybot.ai.terraform_generator.gen_terraform", mock_terraform)
+    monkeypatch.setattr("skybot.ai.summary.summarize_terraform_plan", mock_summary)
+
+    from skybot.cli import app
+
     result = runner.invoke(app, ["init", "--local"])
     assert result.exit_code == 0
     assert os.path.exists(".skybot/default")
     return temp_dir
 
 
-@pytest.fixture
-def mock_gen_terraform(monkeypatch):
-    """Mock the terraform generation function."""
-
-    def mock_terraform(*args, **kwargs):
-        return """
-resource "aws_s3_bucket" "test" {
-  bucket = "mybucket"
-}
-"""
-
-    monkeypatch.setattr(terraform_generator, "gen_terraform", mock_terraform)
-
-
-@pytest.fixture
-def mock_summarize_plan(monkeypatch):
-    """Mock the terraform plan summarization function."""
-
-    def mock_summary(*args, **kwargs):
-        return "Created S3 bucket 'mybucket'"
-
-    monkeypatch.setattr(summary, "summarize_terraform_plan", mock_summary)
-
-
 def test_version(runner):
     """Test the version command."""
+    from skybot.cli import app
+
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
     assert "SkyBot version:" in result.stdout
@@ -110,16 +85,18 @@ def test_version(runner):
 
 def test_init_project(runner, temp_dir):
     """Test project initialization."""
+    from skybot.cli import app
+
     result = runner.invoke(app, ["init", "--local"])
     assert result.exit_code == 0
     assert os.path.exists(".skybot/default")
     assert os.path.exists(".skybot/default/provider_local.tf")
 
 
-def test_create_component(
-    runner, initialized_project, localstack, mock_gen_terraform, mock_summarize_plan
-):
+def test_create_component(runner, initialized_project, localstack, monkeypatch):
     """Test component creation with AWS CLI verification."""
+    from skybot.cli import app
+
     # Create the component
     result = runner.invoke(
         app,
