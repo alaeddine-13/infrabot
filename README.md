@@ -14,6 +14,7 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
 * Component-based infrastructure management
 * Interactive chat interface for cloud resources
 * Support for multiple infrastructure components
+* Self-healing infrastructure creation with automatic error fixing
 
 ## 🛠️ Prerequisites
 
@@ -49,7 +50,7 @@ skybot init [--verbose] [--local]
 
 Create a new component:
 ```bash
-skybot component create --prompt "Your infrastructure description" --name component-name [--verbose] [--force] [--model MODEL_NAME]
+skybot component create --prompt "Your infrastructure description" --name component-name [--verbose] [--force] [--model MODEL_NAME] [--self-healing] [--max-attempts N]
 ```
 
 Delete a component:
@@ -84,9 +85,9 @@ skybot version
 skybot init
 ```
 
-2. Create a web server component:
+2. Create a web server component with self-healing:
 ```bash
-skybot component create --prompt "Create an EC2 instance with nginx installed" --name web-server
+skybot component create --prompt "Create an EC2 instance with nginx installed" --name web-server --self-healing
 ```
 
 3. Create a local S3 bucket for testing:
@@ -94,9 +95,9 @@ skybot component create --prompt "Create an EC2 instance with nginx installed" -
 skybot component create --prompt "Create an S3 bucket" --name test-bucket --local
 ```
 
-4. Create a database component:
+4. Create a database component with custom retry attempts:
 ```bash
-skybot component create --prompt "Set up an RDS instance for PostgreSQL" --name database
+skybot component create --prompt "Set up an RDS instance for PostgreSQL" --name database --self-healing --max-attempts 5
 ```
 
 5. Chat about your infrastructure:
@@ -119,3 +120,42 @@ When you initialize a project, SkyBot creates a `.skybot` directory with the fol
 ```
 
 Each component is stored as a separate Terraform file in the workspace directory.
+
+## 🔧 Advanced Features
+
+### Self-Healing Infrastructure Creation
+
+SkyBot includes a self-healing feature that automatically fixes Terraform errors during resource creation:
+
+- Enable with `--self-healing` flag
+- Set maximum retry attempts with `--max-attempts N` (default: 3)
+- Uses AI to analyze errors and fix configuration issues
+- Maintains original infrastructure intent while resolving dependencies
+- Shows detailed fix explanations for transparency
+
+Example with self-healing:
+```bash
+skybot component create \
+  --prompt "Create a highly available EC2 setup with auto-scaling" \
+  --name ha-web \
+  --self-healing \
+  --max-attempts 5
+```
+
+If Terraform encounters errors during plan or apply:
+1. SkyBot analyzes the error output
+2. AI suggests fixes while preserving the original intent
+3. Retries the operation with fixed configuration
+4. Continues until success or max attempts reached
+
+### Langfuse Logging
+
+SkyBot supports observability and monitoring of AI interactions through Langfuse:
+
+- Set up Langfuse credentials:
+  ```bash
+  export LANGFUSE_PUBLIC_KEY='your_public_key'
+  export LANGFUSE_SECRET_KEY='your_secret_key'
+  ```
+
+- All AI interactions are automatically logged to your Langfuse dashboard

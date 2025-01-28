@@ -27,7 +27,7 @@ authors = ["Alaeddine Abdessalem <alaeddine.abdessalem@gmail.com>"]
 packages = [{include = "skybot", from = "src"}]
 
 [tool.poetry.dependencies]
-python = ">3.10"  # Replace with your Python version
+python = "<4.0,>3.10"  # Replace with your Python version
 typer = "^0.12.5"
 click = "^8.1.7"
 openai = "^1.53.0"

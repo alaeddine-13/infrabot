@@ -5,6 +5,7 @@ from typing import Optional
 import re
 import logging
 import warnings
+import uuid
 
 from rich.live import Live
 from rich.spinner import Spinner
@@ -13,7 +14,7 @@ from rich import print as rprint
 import typer
 from rich.console import Console
 
-from skybot.ai.terraform_generator import gen_terraform
+from skybot.ai.terraform_generator import gen_terraform, fix_terraform
 from skybot.infra_utils.terraform import TerraformWrapper
 from skybot.utils.parsing import extract_code_blocks
 from skybot import api
@@ -32,8 +33,6 @@ logger = logging.getLogger("skybot.cli")
 
 app.add_typer(component_app, name="component")
 console = Console()
-
-# Sub-commands for "component"
 
 
 @app.command("init")
@@ -75,10 +74,20 @@ def create_component(
     force: bool = typer.Option(
         False, "--force", "-f", help="Skip confirmation and automatically apply changes"
     ),
+    self_healing: bool = typer.Option(
+        False,
+        "--self-healing",
+        "-s",
+        help="Enable self-healing mode to automatically fix terraform errors",
+    ),
+    max_attempts: int = typer.Option(
+        3, "--max-attempts", help="Maximum number of self-healing attempts"
+    ),
 ):
     """Create a new component."""
     # Validate the component name
     logger.debug(f"Creating component with name: {name}")
+
     if not re.match(r"^[a-zA-Z0-9-_]+$", name):
         logger.error(f"Invalid component name: {name}")
         rprint("Invalid component name. It should contain only A-Z, a-z, 0-9, and -.")
@@ -104,80 +113,123 @@ def create_component(
     # Create a spinner
     spinner = Spinner("dots", text="Generating Terraform resources...")
 
+    # Generate session ID for this operation
+    session_id = str(uuid.uuid4())
+
     # Use Live context to manage the spinner
     with Live(spinner, refresh_per_second=10) as live:
         logger.debug(
             f"Generating terraform code for prompt: {prompt} using model: {model}"
         )
         # Generate terraform code
-        response = gen_terraform(prompt, model=model)
+        response = gen_terraform(prompt, model=model, session_id=session_id)
         terraform_code = extract_code_blocks(response, title="terraform")[0]
         _ = extract_code_blocks(response, title="remarks")[0]
 
         # Update spinner text before stopping
         spinner.text = "Generation complete!"
 
-    try:
-        # Save the generated Terraform code to the file
-        logger.debug(f"Saving terraform code to: {tf_file_path}")
-        with open(tf_file_path, "w") as f:
-            f.write(terraform_code)
-
+    attempt = 1
+    while attempt <= max_attempts:
         try:
-            # Run Terraform plan
-            logger.debug("Running terraform plan")
-            with Live(
-                Spinner("dots", text="Generating a plan..."), refresh_per_second=10
-            ):
-                plan_output = terraform_wrapper.plan()
+            # Save the generated Terraform code to the file
+            logger.debug(f"Saving terraform code to: {tf_file_path}")
+            with open(tf_file_path, "w") as f:
+                f.write(terraform_code)
 
-            # Generate and display the plan summary regardless of verbose mode
-            summary = summarize_terraform_plan(plan_output)
-            if summary:
-                rprint("\n[bold]Plan Summary:[/bold]")
-                rprint(summary)
+            try:
+                # Run Terraform plan
+                logger.debug("Running terraform plan")
+                with Live(
+                    Spinner("dots", text="Generating a plan..."), refresh_per_second=10
+                ):
+                    plan_output = terraform_wrapper.plan()
 
-            if verbose:
-                rprint("\nDetailed Terraform Plan:")
-                rprint(plan_output)
+                # Generate and display the plan summary regardless of verbose mode
+                summary = summarize_terraform_plan(plan_output)
+                if summary:
+                    rprint("\n[bold]Plan Summary:[/bold]")
+                    rprint(summary)
 
-            # Skip confirmation if force flag is set
-            if force:
-                confirmation = True
-            else:
-                confirmation = typer.confirm(
-                    "Do you want to apply these changes?", default=False
+                if verbose:
+                    rprint("\nDetailed Terraform Plan:")
+                    rprint(plan_output)
+
+                # Skip confirmation if force flag is set
+                if force:
+                    confirmation = True
+                else:
+                    confirmation = typer.confirm(
+                        "Do you want to apply these changes?", default=False
+                    )
+
+                if confirmation:
+                    # Apply the changes
+                    logger.debug("Applying terraform changes")
+                    with Live(Spinner("dots"), refresh_per_second=10) as live:
+                        live.update("[yellow]Applying Terraform changes...[/yellow]")
+                        terraform_wrapper.apply()
+                    rprint("[bold green]Changes applied successfully![/bold green]")
+                    rprint(
+                        f"[bold green]Terraform file saved successfully at {tf_file_path}[/bold green]"
+                    )
+                    break  # Success, exit the loop
+                else:
+                    logger.info("User declined to apply changes")
+                    # Roll back by deleting the created file
+                    os.remove(tf_file_path)
+                    rprint("[bold red]Terraform changes not applied.[/bold red]")
+                    return
+
+            except Exception as e:
+                error_output = str(e)
+                if not self_healing or attempt >= max_attempts:
+                    # Roll back by deleting the created file
+                    if os.path.exists(tf_file_path):
+                        os.remove(tf_file_path)
+                    logger.error(f"Error during terraform operations: {error_output}")
+                    rprint(f"An error occurred: {error_output}")
+                    if not self_healing:
+                        raise
+                    break
+
+                # Try to fix the error with self-healing
+                logger.info(
+                    f"Attempting self-healing (attempt {attempt}/{max_attempts})"
                 )
-
-            if confirmation:
-                # Apply the changes
-                logger.debug("Applying terraform changes")
-                with Live(Spinner("dots"), refresh_per_second=10) as live:
-                    live.update("[yellow]Applying Terraform changes...[/yellow]")
-                    terraform_wrapper.apply()
-                rprint("[bold green]Changes applied successfully![/bold green]")
                 rprint(
-                    f"[bold green]Terraform file saved successfully at {tf_file_path}[/bold green]"
+                    f"\n[yellow]Attempting to fix Terraform errors (attempt {attempt}/{max_attempts})...[/yellow]"
                 )
-            else:
-                logger.info("User declined to apply changes")
-                # Roll back by deleting the created file
-                os.remove(tf_file_path)
-                rprint("[bold red]Terraform changes not applied.[/bold red]")
 
-        except Exception as e:
-            # Roll back by deleting the created file
+                with Live(
+                    Spinner("dots", text="Fixing Terraform code..."),
+                    refresh_per_second=10,
+                ):
+                    response = fix_terraform(
+                        prompt,
+                        terraform_code,
+                        error_output,
+                        model=model,
+                        session_id=session_id,
+                    )
+                    if not response:
+                        raise Exception("Failed to fix Terraform code")
+
+                    terraform_code = extract_code_blocks(response, title="terraform")[0]
+                    _ = extract_code_blocks(response, title="remarks")[0]
+
+        except Exception:
+            # Ensure the file is deleted in case of any error
             if os.path.exists(tf_file_path):
                 os.remove(tf_file_path)
-            logger.error(f"Error during terraform operations: {str(e)}")
-            rprint(f"An error occurred: {e}")
             raise
 
-    except Exception:
-        # Ensure the file is deleted in case of any error
-        if os.path.exists(tf_file_path):
-            os.remove(tf_file_path)
-        raise
+        attempt += 1
+
+    if attempt > max_attempts and self_healing:
+        rprint(
+            "[bold red]Maximum self-healing attempts reached. Could not fix the errors.[/bold red]"
+        )
 
 
 def _validate_component_and_project(
