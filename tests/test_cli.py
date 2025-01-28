@@ -93,7 +93,7 @@ def test_init_project(runner, temp_dir):
     assert os.path.exists(".skybot/default/provider_local.tf")
 
 
-def test_create_component(runner, initialized_project, localstack, monkeypatch):
+def test_create_component(runner, initialized_project, monkeypatch):
     """Test component creation with AWS CLI verification."""
     from skybot.cli import app
 

@@ -148,7 +148,7 @@ If Terraform encounters errors during plan or apply:
 3. Retries the operation with fixed configuration
 4. Continues until success or max attempts reached
 
-### Langfuse Logging
+### Langfuse Monitoring
 
 SkyBot supports observability and monitoring of AI interactions through Langfuse:
 
