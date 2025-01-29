@@ -123,8 +123,13 @@ def create_component(
         )
         # Generate terraform code
         response = gen_terraform(prompt, model=model, session_id=session_id)
+
+        # in case the response is coming from a reasoning model
+        # Remove content between <think></think> tags
+        response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL)
+
         terraform_code = extract_code_blocks(response, title="terraform")[0]
-        _ = extract_code_blocks(response, title="remarks")[0]
+        _ = next(iter(extract_code_blocks(response, title="remarks")), "")
 
         # Update spinner text before stopping
         spinner.text = "Generation complete!"
@@ -216,7 +221,7 @@ def create_component(
                         raise Exception("Failed to fix Terraform code")
 
                     terraform_code = extract_code_blocks(response, title="terraform")[0]
-                    _ = extract_code_blocks(response, title="remarks")[0]
+                    _ = next(iter(extract_code_blocks(response, title="remarks")), "")
 
         except Exception:
             # Ensure the file is deleted in case of any error

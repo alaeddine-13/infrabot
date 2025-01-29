@@ -7,7 +7,6 @@ from skybot.ai.config import (
     MODEL_CONFIG,
     TERRAFORM_SYSTEM_PROMPT,
     TERRAFORM_FIX_SYSTEM_PROMPT,
-    get_openai_client,
     LANGFUSE_ENABLED,
 )
 
@@ -84,7 +83,6 @@ def fix_terraform(
         Fixed Terraform configuration as a string
     """
     config = MODEL_CONFIG["terraform_fix"]
-    client = get_openai_client()
 
     prompt = f"""Original request: {request}
 
@@ -111,12 +109,17 @@ Please fix the terraform code to resolve these errors."""
         },
     ]
 
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        prediction={"type": "content", "content": current_code},
-        temperature=config["temperature"],
-    )
+    # Only use prediction for gpt-4o and gpt-4o-mini models
+    kwargs = {
+        "model": model,
+        "messages": messages,
+        "temperature": config["temperature"],
+    }
+
+    if model in ["gpt-4o", "gpt-4o-mini"]:
+        kwargs["prediction"] = {"type": "content", "content": current_code}
+
+    response = completion(**kwargs)
 
     if LANGFUSE_ENABLED and hasattr(response, "usage"):
         langfuse_context.update_current_trace(
