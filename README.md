@@ -50,7 +50,7 @@ skybot init [--verbose] [--local]
 
 Create a new component:
 ```bash
-skybot component create --prompt "Your infrastructure description" --name component-name [--verbose] [--force] [--model MODEL_NAME] [--self-healing] [--max-attempts N]
+skybot component create --prompt "Your infrastructure description" --name component-name [--verbose] [--force] [--model MODEL_NAME] [--self-healing] [--max-attempts N] [--keep-on-failure]
 ```
 
 Delete a component:
@@ -132,6 +132,7 @@ SkyBot includes a self-healing feature that automatically fixes Terraform errors
 - Uses AI to analyze errors and fix configuration issues
 - Maintains original infrastructure intent while resolving dependencies
 - Shows detailed fix explanations for transparency
+- Use `--keep-on-failure` to preserve generated Terraform files even when errors occur (useful for debugging)
 
 Example with self-healing:
 ```bash
@@ -139,7 +140,8 @@ skybot component create \
   --prompt "Create a highly available EC2 setup with auto-scaling" \
   --name ha-web \
   --self-healing \
-  --max-attempts 5
+  --max-attempts 5 \
+  --keep-on-failure
 ```
 
 If Terraform encounters errors during plan or apply:
@@ -147,6 +149,7 @@ If Terraform encounters errors during plan or apply:
 2. AI suggests fixes while preserving the original intent
 3. Retries the operation with fixed configuration
 4. Continues until success or max attempts reached
+5. If `--keep-on-failure` is set, preserves the generated Terraform files for inspection even if errors occur
 
 ### Langfuse Monitoring
 
@@ -159,3 +162,51 @@ SkyBot supports observability and monitoring of AI interactions through Langfuse
   ```
 
 - All AI interactions are automatically logged to your Langfuse dashboard
+
+### Alternative Models
+
+SkyBot supports multiple AI models for infrastructure generation through LiteLLM integration. While OpenAI is the default provider, you can use other models by setting the appropriate API key and specifying the model:
+
+Note: Even when using alternative models, the `OPENAI_API_KEY` environment variable is still required for certain auxiliary tasks within SkyBot.
+
+#### Using Groq Models
+```bash
+export GROQ_API_KEY='your_api_key'
+skybot component create \
+  --name eks-cluster-1 \
+  --prompt "create an EKS cluster named MyKubernetesCluster" \
+  --self-healing \
+  --model "groq/deepseek-r1-distill-llama-70b"
+```
+
+#### Using Perplexity Models
+```bash
+export PERPLEXITY_API_KEY='your_api_key'
+skybot component create \
+  --name eks-cluster-1 \
+  --prompt "create an EKS cluster named MyKubernetesCluster" \
+  --self-healing \
+  --model "perplexity/sonar"
+```
+
+The `--model` flag allows you to specify which model to use for infrastructure generation. Make sure to set the corresponding API key as an environment variable before running the command.
+
+SkyBot supports all models available through LiteLLM (see [LiteLLM Documentation](https://docs.litellm.ai/docs/)), including but not limited to:
+- OpenAI (default), for instance: `gpt-4o`, `o3-mini`
+- Groq, for instance: `groq/deepseek-r1-distill-llama-70b`
+- Perplexity, for instance: `perplexity/sonar-pro`
+- Anthropic, for instance: `anthropic/claude-3-5-sonnet`
+- Google VertexAI
+- AWS Bedrock
+- Azure OpenAI
+- Hugging Face
+- And many more
+
+Each provider requires its own API key to be set as an environment variable. Common examples:
+- `OPENAI_API_KEY` for OpenAI models (required for all setups)
+- `GROQ_API_KEY` for Groq models
+- `PERPLEXITY_API_KEY` for Perplexity models
+- `ANTHROPIC_API_KEY` for Anthropic models
+- `AZURE_API_KEY` for Azure OpenAI models
+
+Refer to the [LiteLLM documentation](https://docs.litellm.ai/docs/) for the complete list of supported models and their corresponding environment variables.
