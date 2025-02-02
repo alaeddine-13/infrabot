@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 if LANGFUSE_ENABLED:
     from langfuse.decorators import observe, langfuse_context
+    from langfuse import Langfuse
+
+    langfuse = Langfuse()
 
 
 @observe(as_type="generation") if LANGFUSE_ENABLED else lambda x: x
@@ -133,6 +136,28 @@ Please fix the terraform code to resolve these errors."""
         )
 
     return response.choices[0].message.content
+
+
+def log_terraform_error(error: str, session_id: Optional[str] = None) -> None:
+    """
+    Log a Terraform error to Langfuse.
+
+    Args:
+        error: The error message from Terraform
+        session_id: Optional session ID for Langfuse tracing
+    """
+    if LANGFUSE_ENABLED:
+        langfuse.trace(
+            name="terraform-error",
+            session_id=session_id,
+            level="ERROR",
+            status_message="Terraform operation failed",
+            output=error,
+            metadata={
+                "error_output": error,
+                "error_type": "TerraformError",
+            },
+        )
 
 
 if __name__ == "__main__":
