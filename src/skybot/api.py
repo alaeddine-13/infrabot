@@ -10,7 +10,9 @@ from skybot.utils.os import get_package_directory, copy_assets
 from skybot.ai.chat import ChatSession
 
 
-def init_project(workdir: str = ".skybot/default", verbose: bool=False, local: bool=False):
+def init_project(
+    workdir: str = ".skybot/default", verbose: bool = False, local: bool = False
+):
     """Initialize a new project."""
 
     # Ensure default directory exists inside .skybot
@@ -19,7 +21,12 @@ def init_project(workdir: str = ".skybot/default", verbose: bool=False, local: b
     # Copy boilerplate assets from assets/ to workdir
     package_dir = get_package_directory("skybot")
     assets_dir = os.path.join(package_dir, "../../assets/terraform/")
-    copy_assets(assets_dir, workdir, whitelist=["provider.tf" if not local else "provider_local.tf", "backend.tf"])
+    copy_assets(
+        assets_dir,
+        workdir,
+        whitelist=["provider.tf" if not local else "provider_local.tf", "backend.tf"],
+    )
+    # copy_assets(assets_dir, workdir, whitelist=["backend.tf"])
     rprint(f"[green] Initialized project directory ({workdir})[/green]")
 
     # Initialize Terraform in the default directory
@@ -28,20 +35,21 @@ def init_project(workdir: str = ".skybot/default", verbose: bool=False, local: b
     # Create a spinner
     spinner = Spinner("dots", text="Initializing terraform (backend, plugins, etc)...")
 
-
     try:
         # Use Live context to manage the spinner
         # TODO: Actually a live spinner does not play well with stdout outputs from terraform init
-        with Live(spinner, refresh_per_second=10) as live:
+        with Live(spinner, refresh_per_second=10):
             terraform_wrapper.init(verbose=verbose)
-        rprint(f"[green]Initialized terraform[/green]")
+        rprint("[green]Initialized terraform[/green]")
     except Exception as e:
         rprint(f"[bold red]{e}[/bold red]")
-    
-    rprint(f"[bold green]Project initialized successfully[/bold green]")
+
+    rprint("[bold green]Project initialized successfully[/bold green]")
 
 
-def start_chat_session(component_name: Optional[str] = None, workdir: str = ".skybot/default"):
+def start_chat_session(
+    component_name: Optional[str] = None, workdir: str = ".skybot/default"
+):
     """Start an interactive chat session about infrastructure components."""
     chat_session = ChatSession(workdir=workdir)
     chat_session.start_chat(component_name)

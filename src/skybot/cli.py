@@ -14,7 +14,11 @@ from rich import print as rprint
 import typer
 from rich.console import Console
 
-from skybot.ai.terraform_generator import gen_terraform, fix_terraform
+from skybot.ai.terraform_generator import (
+    gen_terraform,
+    fix_terraform,
+    log_terraform_error,
+)
 from skybot.infra_utils.terraform import TerraformWrapper
 from skybot.utils.parsing import extract_code_blocks
 from skybot import api
@@ -83,6 +87,16 @@ def create_component(
     max_attempts: int = typer.Option(
         3, "--max-attempts", help="Maximum number of self-healing attempts"
     ),
+    keep_on_failure: bool = typer.Option(
+        False,
+        "--keep-on-failure",
+        help="Keep generated Terraform files even if an error occurs",
+    ),
+    langfuse_session_id: Optional[str] = typer.Option(
+        None,
+        "--langfuse-session-id",
+        help="Session ID for Langfuse tracking. Auto-generated if not provided",
+    ),
 ):
     """Create a new component."""
     # Validate the component name
@@ -113,8 +127,8 @@ def create_component(
     # Create a spinner
     spinner = Spinner("dots", text="Generating Terraform resources...")
 
-    # Generate session ID for this operation
-    session_id = str(uuid.uuid4())
+    # Use provided session ID or generate a new one
+    session_id = langfuse_session_id or str(uuid.uuid4())
 
     # Use Live context to manage the spinner
     with Live(spinner, refresh_per_second=10) as live:
@@ -188,11 +202,13 @@ def create_component(
 
             except Exception as e:
                 error_output = str(e)
+                log_terraform_error(error_output, session_id)
+
                 if not self_healing or attempt >= max_attempts:
-                    # Roll back by deleting the created file
-                    if os.path.exists(tf_file_path):
+                    # Roll back by deleting the created file only if keep_on_failure is False
+                    if not keep_on_failure and os.path.exists(tf_file_path):
                         os.remove(tf_file_path)
-                    logger.error(f"Error during terraform operations: {error_output}")
+                    # logger.error(f"Error during terraform operations: {error_output}")
                     rprint(f"An error occurred: {error_output}")
                     if not self_healing:
                         raise
@@ -224,8 +240,8 @@ def create_component(
                     _ = next(iter(extract_code_blocks(response, title="remarks")), "")
 
         except Exception:
-            # Ensure the file is deleted in case of any error
-            if os.path.exists(tf_file_path):
+            # Ensure the file is deleted in case of any error, unless keep_on_failure is True
+            if not keep_on_failure and os.path.exists(tf_file_path):
                 os.remove(tf_file_path)
             raise
 
