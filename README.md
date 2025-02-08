@@ -31,6 +31,8 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
   ```bash
   aws configure
   ```
+
+P.S, make sure to configure the default region as well.
 - OpenAI API key:
   ```bash
   export OPENAI_API_KEY='your_api_key_here'
@@ -53,14 +55,14 @@ Create a new component:
 skybot component create --prompt "Your infrastructure description" --name component-name [--verbose] [--force] [--model MODEL_NAME] [--self-healing] [--max-attempts N] [--keep-on-failure]
 ```
 
-Delete a component:
+Delete all components:
 ```bash
-skybot component delete [--name component-name] [--force]
+skybot component delete [--force]
 ```
 
-Destroy component infrastructure:
+Destroy all components infrastructure:
 ```bash
-skybot component destroy [--name component-name] [--force]
+skybot component destroy [--force]
 ```
 
 Edit a component:

@@ -300,17 +300,17 @@ def _confirm_action(
 
 @component_app.command("destroy")
 def destroy_component(
-    component_name: Optional[str] = typer.Option(
-        None,
-        "--name",
-        "-n",
-        help="Name of the component to destroy infrastructure for",
-    ),
+    # component_name: Optional[str] = typer.Option(
+    #     None,
+    #     "--name",
+    #     "-n",
+    #     help="Name of the component to destroy infrastructure for",
+    # ),
     force: bool = typer.Option(
         False, "--force", "-f", help="Force destruction without confirmation"
     ),
 ):
-    """Destroy a component's cloud infrastructure while keeping its configuration."""
+    """Destroy all cloud infrastructure while keeping configurations."""
     logger.debug("Destroying component infrastructure")
 
     components = TerraformComponentManager.list_components(WORKDIR)
@@ -320,19 +320,20 @@ def destroy_component(
         return
 
     # Create component object if name is specified
-    component = None
-    if component_name:
-        component = TerraformComponent(
-            name=component_name, terraform_code="", workdir=WORKDIR
-        )
-        if not TerraformComponentManager.component_exists(component):
-            rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
-            return
+    # component = None
+    # if component_name:
+    #     component = TerraformComponent(
+    #         name=component_name, terraform_code="", workdir=WORKDIR
+    #     )
+    # if not TerraformComponentManager.component_exists(component):
+    #     rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
+    #     return
 
     # Confirm destruction unless force flag is used
     if not _confirm_action(
         "destroy",
-        component_name,
+        # component_name,
+        None,
         components,
         force,
         "This action will remove resources while keeping their corresponding configuration.",
@@ -344,17 +345,17 @@ def destroy_component(
         with Live(
             Spinner("dots", text="Destroying infrastructure..."), refresh_per_second=10
         ):
-            result = terraform_wrapper.destroy(component)
-
+            # result = terraform_wrapper.destroy(component)
+            result = terraform_wrapper.destroy(None)
         logger.debug("result from terraform:", result)
-        if component_name:
-            rprint(
-                f"[bold green]Infrastructure for component '{component_name}' has been successfully destroyed![/bold green]"
-            )
-        else:
-            rprint(
-                "[bold green]All infrastructure has been successfully destroyed![/bold green]"
-            )
+        # if component_name:
+        #     rprint(
+        #         f"[bold green]Infrastructure for component '{component_name}' has been successfully destroyed![/bold green]"
+        #     )
+        # else:
+        rprint(
+            "[bold green]All infrastructure has been successfully destroyed![/bold green]"
+        )
 
     except Exception as e:
         logger.error(f"Error destroying component infrastructure: {str(e)}")
@@ -365,17 +366,17 @@ def destroy_component(
 
 @component_app.command("delete")
 def delete_component(
-    component_name: Optional[str] = typer.Option(
-        None,
-        "--name",
-        "-n",
-        help="Name of the component configuration to delete",
-    ),
+    # component_name: Optional[str] = typer.Option(
+    #     None,
+    #     "--name",
+    #     "-n",
+    #     help="Name of the component configuration to delete",
+    # ),
     force: bool = typer.Option(
         False, "--force", "-f", help="Force deletion without confirmation"
     ),
 ):
-    """Delete a component's configuration file."""
+    """Delete all component configurations."""
     logger.debug("Deleting component configuration")
 
     components = TerraformComponentManager.list_components(WORKDIR)
@@ -385,20 +386,20 @@ def delete_component(
         return
 
     # Create component object if name is specified
-    component = None
-    if component_name:
-        component = TerraformComponent(
-            name=component_name, terraform_code="", workdir=WORKDIR
-        )
-        if not TerraformComponentManager.component_exists(component):
-            rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
-            return
+    # component = None
+    # if component_name:
+    #     component = TerraformComponent(
+    #         name=component_name, terraform_code="", workdir=WORKDIR
+    #     )
+    #     if not TerraformComponentManager.component_exists(component):
+    #         rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
+    #         return
 
     # Confirm deletion unless force flag is used
     if not _confirm_action(
         "delete",
-        component_name,
-        components,
+        # component_name,
+        None,
         force,
         "This action will remove resources and their corresponding configuration.",
     ):
@@ -410,24 +411,25 @@ def delete_component(
         with Live(
             Spinner("dots", text="Destroying infrastructure..."), refresh_per_second=10
         ):
-            terraform_wrapper.destroy(component)
+            # terraform_wrapper.destroy(component)
+            terraform_wrapper.destroy(None)
 
         # Delete the component files
-        if component_name:
-            TerraformComponentManager.cleanup_component(component)
-            rprint(
-                f"[bold green]Component '{component_name}' and its infrastructure have been successfully deleted![/bold green]"
+        # if component_name:
+        #     TerraformComponentManager.cleanup_component(component)
+        #     rprint(
+        #         f"[bold green]Component '{component_name}' and its infrastructure have been successfully deleted![/bold green]"
+        #     )
+        # else:
+        # Delete all components
+        for comp_name in components:
+            comp = TerraformComponent(
+                name=comp_name, terraform_code="", workdir=WORKDIR
             )
-        else:
-            # Delete all components
-            for comp_name in components:
-                comp = TerraformComponent(
-                    name=comp_name, terraform_code="", workdir=WORKDIR
-                )
-                TerraformComponentManager.cleanup_component(comp)
-            rprint(
-                "[bold green]All component configurations have been deleted![/bold green]"
-            )
+            TerraformComponentManager.cleanup_component(comp)
+        rprint(
+            "[bold green]All component configurations have been deleted![/bold green]"
+        )
 
     except Exception as e:
         logger.error(f"Error deleting component configuration: {str(e)}")

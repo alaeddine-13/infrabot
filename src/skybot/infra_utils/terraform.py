@@ -46,10 +46,10 @@ class TerraformWrapper:
             component: Optional TerraformComponent to plan for. If None, plans for all components.
         """
         command = "terraform plan"
-        if component:
-            command += f" -target={component.tf_file_name}"
-            if component.tfvars_code:
-                command += f" -var-file={component.tfvars_file_name}"
+        # if component:
+        #     command += f" -target={component.tf_file_name}"
+        #     if component.tfvars_code:
+        #         command += f" -var-file={component.tfvars_file_name}"
         return self.run_command(command)
 
     def apply(self, component: Optional[TerraformComponent] = None, auto_approve=True):
@@ -60,10 +60,10 @@ class TerraformWrapper:
             auto_approve: Whether to skip interactive approval.
         """
         command = "terraform apply"
-        if component:
-            command += f" -target={component.tfvars_file_name}"
-            if component.tfvars_code:
-                command += f" -var-file={component.tfvars_file_name}"
+        # if component:
+        #     command += f" -target={component.tf_file_name}"
+        #     if component.tfvars_code:
+        #         command += f" -var-file={component.tfvars_file_name}"
         if auto_approve:
             command += " -auto-approve"
         return self.run_command(command)
@@ -78,10 +78,10 @@ class TerraformWrapper:
             auto_approve: Whether to skip interactive approval.
         """
         command = "terraform destroy"
-        if component:
-            command += f" -target={component.tf_file_name}"
-            if component.tfvars_code:
-                command += f" -var-file={component.tfvars_file_name}"
+        # if component:
+        #     command += f" -target={component.tf_file_name}"
+        #     if component.tfvars_code:
+        #         command += f" -var-file={component.tfvars_file_name}"
         if auto_approve:
             command += " -auto-approve"
         return self.run_command(command)

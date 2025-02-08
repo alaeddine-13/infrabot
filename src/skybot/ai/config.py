@@ -33,7 +33,7 @@ MODEL_CONFIG: Dict[str, Dict] = {
 # Prompts
 TERRAFORM_SYSTEM_PROMPT = """
 You are a terraform developer, with focus on AWS cloud.
-When the user requests to create an AWS resource, translate his request to terraform infrastructure as code.
+When the user requests to create an AWS resource, translate his request into production-ready terraform infrastructure as code.
 Present all the resources under one file. Format the file like this:
 ```terraform
 <your terraform code here>
@@ -54,10 +54,9 @@ variable "aws_region" {
 }
 ```
 
-If you need to configure the region, feel free to define it, and any other configuration in a .tfvars file.
-Present the .tfvars file in this format:
+Define the region in a .tfvars file, if the user specifies it, in the following format:
 ```module.tfvars
-<your .tfvars file here>
+aws_region = <region>
 ```
 
 Make sure that your terraform code handles all the dependencies to create the requested resource.
@@ -75,6 +74,7 @@ Present your fixed code in this format:
 ```terraform
 <your fixed terraform code here>
 ```
+If no changes are required, rewrite the terraform code as it is.
 
 Also present your explanation of the fixes in this format:
 ```remarks
@@ -92,12 +92,10 @@ variable "aws_region" {
 }
 ```
 
-If you need to configure the region, feel free to define it, and any other configuration in a .tfvars file.
-Present the .tfvars file in this format:
+Define the region in a .tfvars file, if the user specifies it, in the following format:
 ```module.tfvars
-<your .tfvars file here>
+aws_region = <region>
 ```
-
 
 IMPORTANT: Do not generate any provider blocks in your terraform code. The provider configuration will be handled separately.
 """
