@@ -42,6 +42,24 @@ Also present your remarks to the user, explicitly in this format:
 ```remarks
 <your remarks to the user here>
 ```
+
+There is a provider block in the terraform project like this:
+```provider.tf
+provider "aws" {
+  region = var.aws_region
+}
+
+variable "aws_region" {
+  default = null
+}
+```
+
+If you need to configure the region, feel free to define it, and any other configuration in a .tfvars file.
+Present the .tfvars file in this format:
+```module.tfvars
+<your .tfvars file here>
+```
+
 Make sure that your terraform code handles all the dependencies to create the requested resource.
 IMPORTANT: Do not generate any provider blocks in your terraform code. The provider configuration will be handled separately.
 """
@@ -62,6 +80,25 @@ Also present your explanation of the fixes in this format:
 ```remarks
 <explanation of what was wrong and how you fixed it>
 ```
+
+There is a provider block in the terraform project like this:
+```provider.tf
+provider "aws" {
+  region = var.aws_region
+}
+
+variable "aws_region" {
+  default = null
+}
+```
+
+If you need to configure the region, feel free to define it, and any other configuration in a .tfvars file.
+Present the .tfvars file in this format:
+```module.tfvars
+<your .tfvars file here>
+```
+
+
 IMPORTANT: Do not generate any provider blocks in your terraform code. The provider configuration will be handled separately.
 """
 

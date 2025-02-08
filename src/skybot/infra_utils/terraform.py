@@ -1,8 +1,10 @@
 import subprocess
 import logging
 from typing import Optional
+from .component_manager import TerraformComponent
 
-logger = logging.getLogger('skybot.terraform')
+logger = logging.getLogger("skybot.terraform")
+
 
 class TerraformWrapper:
     def __init__(self, working_directory):
@@ -11,7 +13,9 @@ class TerraformWrapper:
 
     def run_command(self, command, verbose=False):
         """Run a command in the subprocess and return the output and error message."""
-        logger.debug(f"Running terraform command: {command} in directory: {self.working_directory}")
+        logger.debug(
+            f"Running terraform command: {command} in directory: {self.working_directory}"
+        )
         if verbose:
             pipe = None
         else:
@@ -22,7 +26,7 @@ class TerraformWrapper:
             stdout=pipe,
             stderr=pipe,
             shell=True,
-            text=True
+            text=True,
         )
         stdout, stderr = process.communicate()
         if process.returncode != 0:
@@ -35,23 +39,49 @@ class TerraformWrapper:
         """Initialize a Terraform working directory."""
         return self.run_command("terraform init", verbose=verbose)
 
-    def plan(self):
-        """Generate and show an execution plan."""
-        return self.run_command("terraform plan")
+    def plan(self, component: Optional[TerraformComponent] = None):
+        """Generate and show an execution plan.
 
-    def apply(self, auto_approve=True):
-        """Apply the changes required to reach the desired state."""
+        Args:
+            component: Optional TerraformComponent to plan for. If None, plans for all components.
+        """
+        command = "terraform plan"
+        if component:
+            command += f" -target={component.tf_file_name}"
+            if component.tfvars_code:
+                command += f" -var-file={component.tfvars_file_name}"
+        return self.run_command(command)
+
+    def apply(self, component: Optional[TerraformComponent] = None, auto_approve=True):
+        """Apply the changes required to reach the desired state.
+
+        Args:
+            component: Optional TerraformComponent to apply. If None, applies all components.
+            auto_approve: Whether to skip interactive approval.
+        """
         command = "terraform apply"
+        if component:
+            command += f" -target={component.tfvars_file_name}"
+            if component.tfvars_code:
+                command += f" -var-file={component.tfvars_file_name}"
         if auto_approve:
             command += " -auto-approve"
         return self.run_command(command)
 
-    def destroy(self, component_name: Optional[str] = None, auto_approve=True):
-        """Destroy all Terraform-managed infrastructure or a specific component."""
-        if component_name is None:
-            command = "terraform destroy"
-        else:
-            command = f"terraform destroy -target={component_name}.tf"
+    def destroy(
+        self, component: Optional[TerraformComponent] = None, auto_approve=True
+    ):
+        """Destroy all Terraform-managed infrastructure or a specific component.
+
+        Args:
+            component: Optional TerraformComponent to destroy. If None, destroys all components.
+            auto_approve: Whether to skip interactive approval.
+        """
+        command = "terraform destroy"
+        if component:
+            command += f" -target={component.tf_file_name}"
+            if component.tfvars_code:
+                command += f" -var-file={component.tfvars_file_name}"
         if auto_approve:
             command += " -auto-approve"
         return self.run_command(command)
@@ -59,24 +89,25 @@ class TerraformWrapper:
     def _ensure_working_directory_exists(self):
         """Ensure the working directory exists before proceeding"""
         import os
+
         if not os.path.exists(self.working_directory):
             try:
                 os.mkdir(self.working_directory)
-                print(f"Created working directory at {self.working_directory}")
+                logger.info(f"Created working directory at {self.working_directory}")
             except Exception as e:
                 raise Exception(f"Failed to create working directory: {e}")
 
     def save_main_tf_file(self, file_content):
         """Save the main.tf file with the given content."""
         self._ensure_working_directory_exists()
-        with open(self.main_tf_file_path, 'w') as f:
+        with open(self.main_tf_file_path, "w") as f:
             f.write(file_content)
         print(f"Main TF file saved successfully at {self.main_tf_file_path}")
 
     def load_main_tf_file(self):
         """Load the content of the main.tf file."""
         try:
-            with open(self.main_tf_file_path, 'r') as f:
+            with open(self.main_tf_file_path, "r") as f:
                 return f.read()
         except FileNotFoundError:
             print("No main.tf file found in the working directory")
@@ -85,12 +116,14 @@ class TerraformWrapper:
 
 if __name__ == "__main__":
     import tempfile
+
     with tempfile.TemporaryDirectory() as working_directory:  # Create a temporary directory using context manager
         # Initialize a TerraformWrapper object with the path to your temporary working directory
         terraform_wrapper = TerraformWrapper(working_directory)
 
     # Save an example main.tf file content
     import uuid
+
     unique_bucket_name = "my-terraform-bucket-" + str(uuid.uuid4())
     example_main_tf_file_content = """
 provider "aws" {{

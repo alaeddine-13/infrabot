@@ -68,6 +68,7 @@ def gen_terraform(
 def fix_terraform(
     request: str,
     current_code: str,
+    tfvars_code: str,
     error_output: str,
     model: str = "gpt-4o",
     session_id: Optional[str] = None,
@@ -78,6 +79,7 @@ def fix_terraform(
     Args:
         request: Original natural language request
         current_code: Current terraform code that produced the error
+        tfvars_code: Current tfvars code that produced the error
         error_output: Error output from terraform plan/apply
         model: The LLM model to use (default: "gpt-4o")
         session_id: Optional session ID for Langfuse tracing
@@ -92,6 +94,11 @@ def fix_terraform(
 Current terraform code:
 ```terraform
 {current_code}
+```
+
+Current tfvars code:
+```tfvars
+{tfvars_code}
 ```
 
 Error output:

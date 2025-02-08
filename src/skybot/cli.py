@@ -20,6 +20,10 @@ from skybot.ai.terraform_generator import (
     log_terraform_error,
 )
 from skybot.infra_utils.terraform import TerraformWrapper
+from skybot.infra_utils.component_manager import (
+    TerraformComponentManager,
+    TerraformComponent,
+)
 from skybot.utils.parsing import extract_code_blocks
 from skybot import api
 from skybot import __version__
@@ -107,35 +111,28 @@ def create_component(
         rprint("Invalid component name. It should contain only A-Z, a-z, 0-9, and -.")
         return
 
-    # Check if Terraform file already exists
-    tf_file_path = f"{WORKDIR}/{name}.tf"
-    if os.path.exists(tf_file_path):
-        logger.warning(f"Terraform file already exists: {tf_file_path}")
-        rprint(
-            f"Terraform file '{name}.tf' already exists. Please choose a different name or overwrite the existing one."
-        )
-        return
-
-    terraform_wrapper = TerraformWrapper(WORKDIR)
-
-    # Check if project is already initialized
-    if not os.path.exists(WORKDIR):
-        logger.error("Project not initialized")
+    # Check if project is initialized
+    if not TerraformComponentManager.ensure_project_initialized(WORKDIR):
         rprint("Project is not initialized. Run `skybot init` first")
         return
 
-    # Create a spinner
-    spinner = Spinner("dots", text="Generating Terraform resources...")
+    # Create component object to check existence
+    component = TerraformComponent(name=name, terraform_code="", workdir=WORKDIR)
+    if TerraformComponentManager.component_exists(component):
+        rprint(f"Component '{name}' already exists. Please choose a different name.")
+        return
 
-    # Use provided session ID or generate a new one
+    terraform_wrapper = TerraformWrapper(WORKDIR)
     session_id = langfuse_session_id or str(uuid.uuid4())
 
-    # Use Live context to manage the spinner
+    # Create a spinner for generation
+    spinner = Spinner("dots", text="Generating Terraform resources...")
+
+    # Generate terraform code
     with Live(spinner, refresh_per_second=10) as live:
         logger.debug(
             f"Generating terraform code for prompt: {prompt} using model: {model}"
         )
-        # Generate terraform code
         response = gen_terraform(prompt, model=model, session_id=session_id)
 
         # in case the response is coming from a reasoning model
@@ -143,18 +140,24 @@ def create_component(
         response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL)
 
         terraform_code = extract_code_blocks(response, title="terraform")[0]
+        tfvars_code = next(
+            iter(extract_code_blocks(response, title="module.tfvars")), ""
+        )
         _ = next(iter(extract_code_blocks(response, title="remarks")), "")
 
         # Update spinner text before stopping
         spinner.text = "Generation complete!"
 
+    # Update component with generated code
+    component.terraform_code = terraform_code
+    component.tfvars_code = tfvars_code
+
     attempt = 1
     while attempt <= max_attempts:
         try:
-            # Save the generated Terraform code to the file
-            logger.debug(f"Saving terraform code to: {tf_file_path}")
-            with open(tf_file_path, "w") as f:
-                f.write(terraform_code)
+            # Save the component files
+            if not TerraformComponentManager.save_component(component, overwrite=True):
+                return
 
             try:
                 # Run Terraform plan
@@ -162,7 +165,7 @@ def create_component(
                 with Live(
                     Spinner("dots", text="Generating a plan..."), refresh_per_second=10
                 ):
-                    plan_output = terraform_wrapper.plan()
+                    plan_output = terraform_wrapper.plan(component)
 
                 # Generate and display the plan summary regardless of verbose mode
                 summary = summarize_terraform_plan(plan_output)
@@ -175,40 +178,29 @@ def create_component(
                     rprint(plan_output)
 
                 # Skip confirmation if force flag is set
-                if force:
-                    confirmation = True
-                else:
-                    confirmation = typer.confirm(
-                        "Do you want to apply these changes?", default=False
-                    )
-
-                if confirmation:
-                    # Apply the changes
-                    logger.debug("Applying terraform changes")
-                    with Live(Spinner("dots"), refresh_per_second=10) as live:
-                        live.update("[yellow]Applying Terraform changes...[/yellow]")
-                        terraform_wrapper.apply()
-                    rprint("[bold green]Changes applied successfully![/bold green]")
-                    rprint(
-                        f"[bold green]Terraform file saved successfully at {tf_file_path}[/bold green]"
-                    )
-                    break  # Success, exit the loop
-                else:
+                if not force and not typer.confirm(
+                    "Do you want to apply these changes?", default=False
+                ):
                     logger.info("User declined to apply changes")
-                    # Roll back by deleting the created file
-                    os.remove(tf_file_path)
+                    TerraformComponentManager.cleanup_component(component)
                     rprint("[bold red]Terraform changes not applied.[/bold red]")
                     return
+
+                # Apply the changes
+                logger.debug("Applying terraform changes")
+                with Live(Spinner("dots"), refresh_per_second=10) as live:
+                    live.update("[yellow]Applying Terraform changes...[/yellow]")
+                    terraform_wrapper.apply(component)
+                rprint("[bold green]Changes applied successfully![/bold green]")
+                break  # Success, exit the loop
 
             except Exception as e:
                 error_output = str(e)
                 log_terraform_error(error_output, session_id)
 
                 if not self_healing or attempt >= max_attempts:
-                    # Roll back by deleting the created file only if keep_on_failure is False
-                    if not keep_on_failure and os.path.exists(tf_file_path):
-                        os.remove(tf_file_path)
-                    # logger.error(f"Error during terraform operations: {error_output}")
+                    if not keep_on_failure:
+                        TerraformComponentManager.cleanup_component(component)
                     rprint(f"An error occurred: {error_output}")
                     if not self_healing:
                         raise
@@ -229,6 +221,7 @@ def create_component(
                     response = fix_terraform(
                         prompt,
                         terraform_code,
+                        tfvars_code,
                         error_output,
                         model=model,
                         session_id=session_id,
@@ -237,12 +230,18 @@ def create_component(
                         raise Exception("Failed to fix Terraform code")
 
                     terraform_code = extract_code_blocks(response, title="terraform")[0]
+                    tfvars_code = next(
+                        iter(extract_code_blocks(response, title="module.tfvars")), ""
+                    )
                     _ = next(iter(extract_code_blocks(response, title="remarks")), "")
 
+                    # Update component with fixed code
+                    component.terraform_code = terraform_code
+                    component.tfvars_code = tfvars_code
+
         except Exception:
-            # Ensure the file is deleted in case of any error, unless keep_on_failure is True
-            if not keep_on_failure and os.path.exists(tf_file_path):
-                os.remove(tf_file_path)
+            if not keep_on_failure:
+                TerraformComponentManager.cleanup_component(component)
             raise
 
         attempt += 1
@@ -257,28 +256,25 @@ def _validate_component_and_project(
     component_name: Optional[str] = None,
 ) -> tuple[list[str], Optional[str]]:
     """Validate project initialization and component existence."""
-    if not os.path.exists(WORKDIR):
+    if not TerraformComponentManager.ensure_project_initialized(WORKDIR):
         logger.error("Project not initialized")
         rprint("Project is not initialized. Run `skybot init` first")
         return [], None
 
     if component_name:
-        tf_file_path = f"{WORKDIR}/{component_name}.tf"
-        if not os.path.exists(tf_file_path):
+        temp_component = TerraformComponent(
+            name=component_name, terraform_code="", workdir=WORKDIR
+        )
+        if not TerraformComponentManager.component_exists(temp_component):
             logger.error(f"Component not found: {component_name}")
             rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
             return [], None
 
     # Get list of component files
-    components = [
-        file[:-3]
-        for file in os.listdir(WORKDIR)
-        if file.endswith(".tf")
-        and not file.endswith("backend.tf")
-        and not file.endswith("provider.tf")
-    ]
-
-    return components, tf_file_path if component_name else None
+    components = TerraformComponentManager.list_components(WORKDIR)
+    return components, os.path.join(
+        WORKDIR, f"{component_name}.tf"
+    ) if component_name else None
 
 
 def _confirm_action(
@@ -317,10 +313,23 @@ def destroy_component(
     """Destroy a component's cloud infrastructure while keeping its configuration."""
     logger.debug("Destroying component infrastructure")
 
-    components, _ = _validate_component_and_project(component_name)
+    components = TerraformComponentManager.list_components(WORKDIR)
+
     if not components:
+        rprint("No components found to destroy.")
         return
 
+    # Create component object if name is specified
+    component = None
+    if component_name:
+        component = TerraformComponent(
+            name=component_name, terraform_code="", workdir=WORKDIR
+        )
+        if not TerraformComponentManager.component_exists(component):
+            rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
+            return
+
+    # Confirm destruction unless force flag is used
     if not _confirm_action(
         "destroy",
         component_name,
@@ -335,7 +344,8 @@ def destroy_component(
         with Live(
             Spinner("dots", text="Destroying infrastructure..."), refresh_per_second=10
         ):
-            result = terraform_wrapper.destroy(component_name)
+            result = terraform_wrapper.destroy(component)
+
         logger.debug("result from terraform:", result)
         if component_name:
             rprint(
@@ -368,13 +378,21 @@ def delete_component(
     """Delete a component's configuration file."""
     logger.debug("Deleting component configuration")
 
-    # Check if project is initialized
-    components, tf_file_path = _validate_component_and_project(component_name)
+    components = TerraformComponentManager.list_components(WORKDIR)
+
     if not components:
+        rprint("No components found to delete.")
         return
 
-    # Check for existing infrastructure and warn user
-    terraform_wrapper = TerraformWrapper(WORKDIR)
+    # Create component object if name is specified
+    component = None
+    if component_name:
+        component = TerraformComponent(
+            name=component_name, terraform_code="", workdir=WORKDIR
+        )
+        if not TerraformComponentManager.component_exists(component):
+            rprint(f"[bold red]Component '{component_name}' not found![/bold red]")
+            return
 
     # Confirm deletion unless force flag is used
     if not _confirm_action(
@@ -388,30 +406,25 @@ def delete_component(
 
     try:
         # Run terraform destroy for the specific component
+        terraform_wrapper = TerraformWrapper(WORKDIR)
         with Live(
-            Spinner("dots", text="Destroying infrastructure'..."), refresh_per_second=10
+            Spinner("dots", text="Destroying infrastructure..."), refresh_per_second=10
         ):
-            terraform_wrapper.destroy(component_name)
+            terraform_wrapper.destroy(component)
 
+        # Delete the component files
         if component_name:
-            # Delete the Terraform file
-            tf_file_path = f"{WORKDIR}/{component_name}.tf"
-            os.remove(tf_file_path)
-            logger.info(f"Deleted terraform file: {tf_file_path}")
+            TerraformComponentManager.cleanup_component(component)
             rprint(
                 f"[bold green]Component '{component_name}' and its infrastructure have been successfully deleted![/bold green]"
             )
         else:
-            # Delete all Terraform files
-            for file in os.listdir(WORKDIR):
-                if (
-                    file.endswith(".tf")
-                    and not file.endswith("backend.tf")
-                    and not file.endswith("provider.tf")
-                ):
-                    tf_file_path = os.path.join(WORKDIR, file)
-                    os.remove(tf_file_path)
-                    logger.debug(f"Deleted terraform file: {tf_file_path}")
+            # Delete all components
+            for comp_name in components:
+                comp = TerraformComponent(
+                    name=comp_name, terraform_code="", workdir=WORKDIR
+                )
+                TerraformComponentManager.cleanup_component(comp)
             rprint(
                 "[bold green]All component configurations have been deleted![/bold green]"
             )
