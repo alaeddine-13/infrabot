@@ -34,7 +34,7 @@ jobs:
     - name: Run tests with coverage
       run: |
         localstack start -d
-        pytest tests/ -v .s --cov=skybot --cov-branch --cov-report=xml
+        pytest tests/ -v .s --cov=infrabot --cov-branch --cov-report=xml
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5

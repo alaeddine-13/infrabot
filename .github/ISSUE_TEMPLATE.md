@@ -1,4 +1,4 @@
-* SkyBot version:
+* InfraBot version:
 * Python version:
 * Operating System:
 

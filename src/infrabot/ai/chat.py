@@ -2,15 +2,15 @@
 
 import os
 from typing import Optional, List, Dict
-from skybot.ai.completion import completion
+from infrabot.ai.completion import completion
 from rich import print as rprint
-from skybot.ai.config import MODEL_CONFIG
+from infrabot.ai.config import MODEL_CONFIG
 
 default_model = MODEL_CONFIG["chat"]["model"]
 
 
 class ChatSession:
-    def __init__(self, workdir: str = ".skybot/default", model: str = default_model):
+    def __init__(self, workdir: str = ".infrabot/default", model: str = default_model):
         self.workdir = workdir
         self.model = model
         self.conversation_history: List[Dict] = []

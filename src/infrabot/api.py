@@ -3,23 +3,23 @@ from typing import Optional
 from rich.spinner import Spinner
 from rich.live import Live
 
-from skybot.infra_utils.terraform import TerraformWrapper
+from infrabot.infra_utils.terraform import TerraformWrapper
 from rich import print as rprint
 
-from skybot.utils.os import get_package_directory, copy_assets
-from skybot.ai.chat import ChatSession
+from infrabot.utils.os import get_package_directory, copy_assets
+from infrabot.ai.chat import ChatSession
 
 
 def init_project(
-    workdir: str = ".skybot/default", verbose: bool = False, local: bool = False
+    workdir: str = ".infrabot/default", verbose: bool = False, local: bool = False
 ):
     """Initialize a new project."""
 
-    # Ensure default directory exists inside .skybot
+    # Ensure default directory exists inside .infrabot
     os.makedirs(workdir, exist_ok=True)
 
     # Copy boilerplate assets from assets/ to workdir
-    package_dir = get_package_directory("skybot")
+    package_dir = get_package_directory("infrabot")
     assets_dir = os.path.join(package_dir, "../../assets/terraform/")
     copy_assets(
         assets_dir,
@@ -48,7 +48,7 @@ def init_project(
 
 
 def start_chat_session(
-    component_name: Optional[str] = None, workdir: str = ".skybot/default"
+    component_name: Optional[str] = None, workdir: str = ".infrabot/default"
 ):
     """Start an interactive chat session about infrastructure components."""
     chat_session = ChatSession(workdir=workdir)

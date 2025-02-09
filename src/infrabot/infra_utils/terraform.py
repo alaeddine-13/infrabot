@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 from .component_manager import TerraformComponent
 
-logger = logging.getLogger("skybot.terraform")
+logger = logging.getLogger("infrabot.terraform")
 
 
 class TerraformWrapper:

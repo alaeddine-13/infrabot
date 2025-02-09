@@ -1,4 +1,4 @@
-"""Console script for skybot."""
+"""Console script for infrabot."""
 
 import os
 from typing import Optional
@@ -14,30 +14,30 @@ from rich import print as rprint
 import typer
 from rich.console import Console
 
-from skybot.ai.terraform_generator import (
+from infrabot.ai.terraform_generator import (
     gen_terraform,
     fix_terraform,
     log_terraform_error,
 )
-from skybot.infra_utils.terraform import TerraformWrapper
-from skybot.infra_utils.component_manager import (
+from infrabot.infra_utils.terraform import TerraformWrapper
+from infrabot.infra_utils.component_manager import (
     TerraformComponentManager,
     TerraformComponent,
 )
-from skybot.utils.parsing import extract_code_blocks
-from skybot import api
-from skybot import __version__
-from skybot.utils.logging_config import setup_logging
-from skybot.ai.summary import summarize_terraform_plan
+from infrabot.utils.parsing import extract_code_blocks
+from infrabot import api
+from infrabot import __version__
+from infrabot.utils.logging_config import setup_logging
+from infrabot.ai.summary import summarize_terraform_plan
 
 # Filter out the specific Pydantic warning
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2:*")
 
-WORKDIR = ".skybot/default"
+WORKDIR = ".infrabot/default"
 
 app = typer.Typer()
-component_app = typer.Typer(help="Manage components in SkyBot")
-logger = logging.getLogger("skybot.cli")
+component_app = typer.Typer(help="Manage components in InfraBot")
+logger = logging.getLogger("infrabot.cli")
 
 app.add_typer(component_app, name="component")
 console = Console()
@@ -113,7 +113,7 @@ def create_component(
 
     # Check if project is initialized
     if not TerraformComponentManager.ensure_project_initialized(WORKDIR):
-        rprint("Project is not initialized. Run `skybot init` first")
+        rprint("Project is not initialized. Run `infrabot init` first")
         return
 
     # Create component object to check existence
@@ -258,7 +258,7 @@ def _validate_component_and_project(
     """Validate project initialization and component existence."""
     if not TerraformComponentManager.ensure_project_initialized(WORKDIR):
         logger.error("Project not initialized")
-        rprint("Project is not initialized. Run `skybot init` first")
+        rprint("Project is not initialized. Run `infrabot init` first")
         return [], None
 
     if component_name:
@@ -453,7 +453,7 @@ def delete_component(
 #         ..., help="Name of the component to chat about"
 #     ),
 # ):
-#     """Chat with your cloud using SkyBot."""
+#     """Chat with your cloud using InfraBot."""
 #     logger.debug(f"Chatting about component: {component_name}")
 #     rprint(
 #         f"[bold red]Component '{component_name}' chatted with successfully![/bold red]"
@@ -462,12 +462,12 @@ def delete_component(
 
 @app.command("version")
 def version():
-    """Display the version of SkyBot."""
-    rprint(f"SkyBot version: {__version__}")
+    """Display the version of InfraBot."""
+    rprint(f"InfraBot version: {__version__}")
 
 
 if __name__ == "__main__":
     # Initialize logging with debug mode set to True
     setup_logging(debug_mode=True)
-    logger.debug("Starting skybot CLI")
+    logger.debug("Starting infrabot CLI")
     app()

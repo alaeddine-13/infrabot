@@ -1,0 +1,46 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowCreateAndRead",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:*",
+                "s3:*",
+                "rds:*",
+                "lambda:*",
+                "dynamodb:*",
+                "cloudwatch:*",
+                "sns:*",
+                "sqs:*",
+                "logs:*",
+                "cloudformation:*",
+                "apigateway:*",
+                "ecr:*",
+                "ecs:*",
+                "dynamo:*",
+                "elasticloadbalancing:*",
+                "autoscaling:*",
+                "application-autoscaling:*",
+                "vpc:*",
+                "glue:*",
+                "states:*",
+                "elasticbeanstalk:*",
+                "elasticache:*",
+                "eks:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "AllowSpecificIAMActions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:PutRolePolicy",
+                "iam:AttachRolePolicy",
+                "iam:PassRole"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

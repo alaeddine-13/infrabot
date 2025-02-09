@@ -2,6 +2,8 @@ import os
 from shutil import copy
 from pkgutil import get_loader
 from typing import Optional
+
+
 def get_package_directory(package_name: str) -> str:
     """Get the directory of a package."""
     loader = get_loader(package_name)
@@ -10,11 +12,14 @@ def get_package_directory(package_name: str) -> str:
     else:
         raise ValueError(f"Package '{package_name}' not found")
 
-def copy_assets(source_dir: str, destination_dir: str, whitelist: Optional[list[str]] = None) -> None:
+
+def copy_assets(
+    source_dir: str, destination_dir: str, whitelist: Optional[list[str]] = None
+) -> None:
     """Copy boilerplate assets from source to destination."""
     if not whitelist:
         whitelist = []
-    
+
     if not os.path.exists(destination_dir):
         os.makedirs(destination_dir)
 

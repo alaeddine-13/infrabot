@@ -6,8 +6,7 @@ import pickle
 import logging
 
 # Create a logger instance
-logger = logging.getLogger('website-creator')
-
+logger = logging.getLogger("website-creator")
 
 
 MAX_DEPTH = 6
@@ -54,7 +53,6 @@ def file_cache(ignore_params=[], verbose=False):
     """
 
     def decorator(func):
-
         func_source_code_hash = hash_code(inspect.getsource(func))
 
         @functools.wraps(func)
@@ -63,7 +61,7 @@ def file_cache(ignore_params=[], verbose=False):
             os.makedirs(cache_dir, exist_ok=True)
 
             # Convert args to a dictionary based on the function's signature
-            _func = getattr(func, '__wrapped__', None) or func
+            _func = getattr(func, "__wrapped__", None) or func
             args_names = _func.__code__.co_varnames[: _func.__code__.co_argcount]
             args_dict = dict(zip(args_names, args))
 
@@ -73,7 +71,7 @@ def file_cache(ignore_params=[], verbose=False):
                 args_dict.pop(param, None)
                 kwargs_clone.pop(param, None)
 
-            kwargs_clone['_n_attempt_cache_id'] = _n_attempt_cache_id
+            kwargs_clone["_n_attempt_cache_id"] = _n_attempt_cache_id
 
             # Create hash based on argument names, argument values, and function source code
             arg_hash = (

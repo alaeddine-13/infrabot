@@ -1,1 +1,1 @@
-"""Unit test package for skybot."""
+"""Unit test package for infrabot."""

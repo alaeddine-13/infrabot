@@ -3,7 +3,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [project]
-name = "skybot"
+name = "infrabot"
 version = "0.1.0"
 description = "Create resource on the cloud with natural language"
 readme = "README.md"
@@ -20,11 +20,11 @@ license = {text = "MIT license"}
 dynamic = ["dependencies"]
 
 [tool.poetry]
-name = "skybot"
+name = "infrabot"
 version = "0.1.0"
 description = "Create resource on the cloud with natural language"
 authors = ["Alaeddine Abdessalem <alaeddine.abdessalem@gmail.com>"]
-packages = [{include = "skybot", from = "src"}]
+packages = [{include = "infrabot", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "<4.0,>3.10"  # Replace with your Python version
@@ -43,9 +43,9 @@ dev = [
 
 [project.urls]
 
-bugs = "https://github.com/alaeddine-13/skybot/issues"
-changelog = "https://github.com/alaeddine-13/skybot/blob/master/changelog.md"
-homepage = "https://github.com/alaeddine-13/skybot"
+bugs = "https://github.com/alaeddine-13/infrabot/issues"
+changelog = "https://github.com/alaeddine-13/infrabot/blob/master/changelog.md"
+homepage = "https://github.com/alaeddine-13/infrabot"
 
 #[tool.setuptools]
 #package-dir = {"" = "src"}
@@ -56,7 +56,7 @@ homepage = "https://github.com/alaeddine-13/skybot"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-# addopts = "-v --cov=skybot --cov-report=term-missing"
+# addopts = "-v --cov=infrabot --cov-report=term-missing"
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::UserWarning",
@@ -81,7 +81,7 @@ allow_untyped_defs = true
 disable_error_code = "attr-defined"
 
 [project.scripts]
-skybot = "skybot.cli:app"
+infrabot = "infrabot.cli:app"
 
 [tool.ruff]
 target-version = "py310"
@@ -105,4 +105,4 @@ ignore = [
 "tests/*" = ["E501"]
 
 [tool.ruff.isort]
-known-first-party = ["skybot"]
+known-first-party = ["infrabot"]

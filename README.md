@@ -1,8 +1,8 @@
-# 🚀 SkyBot
+# 🚀 InfraBot
 
-![PyPI version](https://img.shields.io/pypi/v/skybot.svg)
-![Documentation Status](https://readthedocs.org/projects/skybot/badge/?version=latest)
-[![codecov](https://codecov.io/github/alaeddine-13/skybot/graph/badge.svg?token=XKIQV0FNC6)](https://codecov.io/github/alaeddine-13/skybot)
+![PyPI version](https://img.shields.io/pypi/v/infrabot.svg)
+![Documentation Status](https://readthedocs.org/projects/infrabot/badge/?version=latest)
+[![codecov](https://codecov.io/github/alaeddine-13/infrabot/graph/badge.svg?token=XKIQV0FNC6)](https://codecov.io/github/alaeddine-13/infrabot)
 
 Create resource on the cloud with natural language using AI-powered Terraform generation
 
@@ -21,7 +21,7 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
 - Python 3.10 or higher
 - Required packages (to be installed via pip):
   ```bash
-  pip install skybot
+  pip install infrabot
   ```
 - Terraform installed:
   ```bash
@@ -47,72 +47,72 @@ P.S, make sure to configure the default region as well.
 
 Initialize a new project:
 ```bash
-skybot init [--verbose] [--local]
+infrabot init [--verbose] [--local]
 ```
 
 Create a new component:
 ```bash
-skybot component create --prompt "Your infrastructure description" --name component-name [--verbose] [--force] [--model MODEL_NAME] [--self-healing] [--max-attempts N] [--keep-on-failure]
+infrabot component create --prompt "Your infrastructure description" --name component-name [--verbose] [--force] [--model MODEL_NAME] [--self-healing] [--max-attempts N] [--keep-on-failure]
 ```
 
 Delete all components:
 ```bash
-skybot component delete [--force]
+infrabot component delete [--force]
 ```
 
 Destroy all components infrastructure:
 ```bash
-skybot component destroy [--force]
+infrabot component destroy [--force]
 ```
 
 Edit a component:
 ```bash
-skybot component edit component-name
+infrabot component edit component-name
 ```
 
 Chat about your infrastructure:
 ```bash
-skybot chat component-name
+infrabot chat component-name
 ```
 
-Check SkyBot version:
+Check InfraBot version:
 ```bash
-skybot version
+infrabot version
 ```
 
 ## 📊 Usage Examples
 
 1. Initialize a new project:
 ```bash
-skybot init
+infrabot init
 ```
 
 2. Create a web server component with self-healing:
 ```bash
-skybot component create --prompt "Create an EC2 instance with nginx installed" --name web-server --self-healing
+infrabot component create --prompt "Create an EC2 instance with nginx installed" --name web-server --self-healing
 ```
 
 3. Create a local S3 bucket for testing:
 ```bash
-skybot component create --prompt "Create an S3 bucket" --name test-bucket --local
+infrabot component create --prompt "Create an S3 bucket" --name test-bucket --local
 ```
 
 4. Create a database component with custom retry attempts:
 ```bash
-skybot component create --prompt "Set up an RDS instance for PostgreSQL" --name database --self-healing --max-attempts 5
+infrabot component create --prompt "Set up an RDS instance for PostgreSQL" --name database --self-healing --max-attempts 5
 ```
 
 5. Chat about your infrastructure:
 ```bash
-skybot chat web-server
+infrabot chat web-server
 ```
 
 ## 🗂️ Project Structure
 
-When you initialize a project, SkyBot creates a `.skybot` directory with the following structure:
+When you initialize a project, InfraBot creates a `.infrabot` directory with the following structure:
 
 ```
-.skybot/
+.infrabot/
 └── default/
     ├── backend.tf
     ├── provider.tf
@@ -127,7 +127,7 @@ Each component is stored as a separate Terraform file in the workspace directory
 
 ### Self-Healing Infrastructure Creation
 
-SkyBot includes a self-healing feature that automatically fixes Terraform errors during resource creation:
+InfraBot includes a self-healing feature that automatically fixes Terraform errors during resource creation:
 
 - Enable with `--self-healing` flag
 - Set maximum retry attempts with `--max-attempts N` (default: 3)
@@ -138,7 +138,7 @@ SkyBot includes a self-healing feature that automatically fixes Terraform errors
 
 Example with self-healing:
 ```bash
-skybot component create \
+infrabot component create \
   --prompt "Create a highly available EC2 setup with auto-scaling" \
   --name ha-web \
   --self-healing \
@@ -147,7 +147,7 @@ skybot component create \
 ```
 
 If Terraform encounters errors during plan or apply:
-1. SkyBot analyzes the error output
+1. InfraBot analyzes the error output
 2. AI suggests fixes while preserving the original intent
 3. Retries the operation with fixed configuration
 4. Continues until success or max attempts reached
@@ -155,7 +155,7 @@ If Terraform encounters errors during plan or apply:
 
 ### Langfuse Monitoring
 
-SkyBot supports observability and monitoring of AI interactions through Langfuse:
+InfraBot supports observability and monitoring of AI interactions through Langfuse:
 
 - Set up Langfuse credentials:
   ```bash
@@ -167,14 +167,14 @@ SkyBot supports observability and monitoring of AI interactions through Langfuse
 
 ### Alternative Models
 
-SkyBot supports multiple AI models for infrastructure generation through LiteLLM integration. While OpenAI is the default provider, you can use other models by setting the appropriate API key and specifying the model:
+InfraBot supports multiple AI models for infrastructure generation through LiteLLM integration. While OpenAI is the default provider, you can use other models by setting the appropriate API key and specifying the model:
 
-Note: Even when using alternative models, the `OPENAI_API_KEY` environment variable is still required for certain auxiliary tasks within SkyBot.
+Note: Even when using alternative models, the `OPENAI_API_KEY` environment variable is still required for certain auxiliary tasks within InfraBot.
 
 #### Using Groq Models
 ```bash
 export GROQ_API_KEY='your_api_key'
-skybot component create \
+infrabot component create \
   --name eks-cluster-1 \
   --prompt "create an EKS cluster named MyKubernetesCluster" \
   --self-healing \
@@ -184,7 +184,7 @@ skybot component create \
 #### Using Perplexity Models
 ```bash
 export PERPLEXITY_API_KEY='your_api_key'
-skybot component create \
+infrabot component create \
   --name eks-cluster-1 \
   --prompt "create an EKS cluster named MyKubernetesCluster" \
   --self-healing \
@@ -193,7 +193,7 @@ skybot component create \
 
 The `--model` flag allows you to specify which model to use for infrastructure generation. Make sure to set the corresponding API key as an environment variable before running the command.
 
-SkyBot supports all models available through LiteLLM (see [LiteLLM Documentation](https://docs.litellm.ai/docs/)), including but not limited to:
+InfraBot supports all models available through LiteLLM (see [LiteLLM Documentation](https://docs.litellm.ai/docs/)), including but not limited to:
 - OpenAI (default), for instance: `gpt-4o`, `o3-mini`
 - Groq, for instance: `groq/deepseek-r1-distill-llama-70b`
 - Perplexity, for instance: `perplexity/sonar-pro`

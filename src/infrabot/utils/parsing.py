@@ -19,7 +19,7 @@ def extract_code_blocks(text: str, title: Optional[str] = None) -> List[str]:
     # \n           - Match newline
     # (.*?)        - Capture any characters (non-greedy) (the content)
     # ```          - Match closing triple backticks
-    pattern = r'```([^\n]*)\n(.*?)```'
+    pattern = r"```([^\n]*)\n(.*?)```"
 
     # Use re.DOTALL to make dot match newlines
     matches = re.finditer(pattern, text, re.DOTALL)
@@ -38,7 +38,7 @@ def extract_code_blocks(text: str, title: Optional[str] = None) -> List[str]:
 
 # Test the function
 if __name__ == "__main__":
-    sample_text = '''```terraform
+    sample_text = """```terraform
 provider "aws" {
   region = "us-west-2"
 }
@@ -46,7 +46,7 @@ provider "aws" {
 
 ```remarks
 This is a remark
-```'''
+```"""
 
     # Test case 1: Extract all blocks
     print("All blocks:")

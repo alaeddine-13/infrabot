@@ -63,39 +63,39 @@ def initialized_project(runner, temp_dir, monkeypatch):
         return "Created S3 bucket 'mybucket'"
 
     # Use monkeypatch to replace the real function with our mock
-    monkeypatch.setattr("skybot.ai.terraform_generator.gen_terraform", mock_terraform)
-    monkeypatch.setattr("skybot.ai.summary.summarize_terraform_plan", mock_summary)
+    monkeypatch.setattr("infrabot.ai.terraform_generator.gen_terraform", mock_terraform)
+    monkeypatch.setattr("infrabot.ai.summary.summarize_terraform_plan", mock_summary)
 
-    from skybot.cli import app
+    from infrabot.cli import app
 
     result = runner.invoke(app, ["init", "--local"])
     assert result.exit_code == 0
-    assert os.path.exists(".skybot/default")
+    assert os.path.exists(".infrabot/default")
     return temp_dir
 
 
 def test_version(runner):
     """Test the version command."""
-    from skybot.cli import app
+    from infrabot.cli import app
 
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
-    assert "SkyBot version:" in result.stdout
+    assert "InfraBot version:" in result.stdout
 
 
 def test_init_project(runner, temp_dir):
     """Test project initialization."""
-    from skybot.cli import app
+    from infrabot.cli import app
 
     result = runner.invoke(app, ["init", "--local"])
     assert result.exit_code == 0
-    assert os.path.exists(".skybot/default")
-    assert os.path.exists(".skybot/default/provider_local.tf")
+    assert os.path.exists(".infrabot/default")
+    assert os.path.exists(".infrabot/default/provider_local.tf")
 
 
 def test_create_component(runner, initialized_project, monkeypatch):
     """Test component creation with AWS CLI verification."""
-    from skybot.cli import app
+    from infrabot.cli import app
 
     # Create the component
     result = runner.invoke(
@@ -112,7 +112,7 @@ def test_create_component(runner, initialized_project, monkeypatch):
         input="y\n",  # Automatically confirm any prompts
     )
     assert result.exit_code == 0
-    assert os.path.exists(".skybot/default/test-bucket.tf")
+    assert os.path.exists(".infrabot/default/test-bucket.tf")
 
     # Verify using AWS CLI that the bucket exists
     # Note: Using --endpoint-url for localstack compatibility
@@ -209,7 +209,7 @@ def test_create_component(runner, initialized_project, monkeypatch):
 #         ["component", "delete", "--name", "test-bucket", "--force"]
 #     )
 #     assert result.exit_code == 0
-#     assert not os.path.exists(".skybot/default/test-bucket.tf")
+#     assert not os.path.exists(".infrabot/default/test-bucket.tf")
 
 #     # Verify bucket still exists (delete only removes configuration)
 #     verify_result = subprocess.run(

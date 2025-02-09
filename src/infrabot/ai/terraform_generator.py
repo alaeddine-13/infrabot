@@ -2,8 +2,8 @@
 
 import logging
 from typing import Optional
-from skybot.ai.completion import completion
-from skybot.ai.config import (
+from infrabot.ai.completion import completion
+from infrabot.ai.config import (
     MODEL_CONFIG,
     TERRAFORM_SYSTEM_PROMPT,
     TERRAFORM_FIX_SYSTEM_PROMPT,
