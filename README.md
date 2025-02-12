@@ -157,6 +157,11 @@ If Terraform encounters errors during plan or apply:
 
 InfraBot supports observability and monitoring of AI interactions through Langfuse:
 
+- Install Langfuse:
+  ```bash
+  pip install langfuse
+  ```
+
 - Set up Langfuse credentials:
   ```bash
   export LANGFUSE_PUBLIC_KEY='your_public_key'
@@ -188,8 +193,10 @@ infrabot component create \
   --name eks-cluster-1 \
   --prompt "create an EKS cluster named MyKubernetesCluster" \
   --self-healing \
-  --model "perplexity/sonar"
+  --model "perplexity/sonar-pro"
 ```
+
+> **Recommendation**: We recommend using the `perplexity/sonar-pro` model for its enhanced factuality and accuracy in infrastructure generation.
 
 The `--model` flag allows you to specify which model to use for infrastructure generation. Make sure to set the corresponding API key as an environment variable before running the command.
 
