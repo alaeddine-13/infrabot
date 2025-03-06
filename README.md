@@ -6,6 +6,8 @@
 
 Create resource on the cloud with natural language using AI-powered Terraform generation
 
+![Demo](assets/demo.gif)
+
 ## 📖 Features
 
 * Natural language-based resource creation
