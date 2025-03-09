@@ -2,6 +2,7 @@ import subprocess
 import logging
 from typing import Optional
 from .component_manager import TerraformComponent
+import json
 
 logger = logging.getLogger("infrabot.terraform")
 
@@ -67,6 +68,19 @@ class TerraformWrapper:
         if auto_approve:
             command += " -auto-approve"
         return self.run_command(command)
+
+    def get_outputs(self) -> dict:
+        """Get the outputs after a successful Terraform apply.
+
+        Returns:
+            dict: A dictionary containing the Terraform outputs, or empty dict if no outputs exist.
+        """
+        try:
+            command = "terraform output -json"
+            output_result = self.run_command(command)
+            return json.loads(output_result)
+        except Exception:
+            return {}
 
     def destroy(
         self, component: Optional[TerraformComponent] = None, auto_approve=True

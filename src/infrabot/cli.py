@@ -29,6 +29,7 @@ from infrabot import api
 from infrabot import __version__
 from infrabot.utils.logging_config import setup_logging
 from infrabot.ai.summary import summarize_terraform_plan
+from infrabot.utils.output_formatter import display_terraform_outputs
 
 # Filter out the specific Pydantic warning
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2:*")
@@ -191,7 +192,13 @@ def create_component(
                 with Live(Spinner("dots"), refresh_per_second=10) as live:
                     live.update("[yellow]Applying Terraform changes...[/yellow]")
                     terraform_wrapper.apply(component)
+                    outputs = terraform_wrapper.get_outputs()
+
                 rprint("[bold green]Changes applied successfully![/bold green]")
+
+                # Display outputs if any exist
+                display_terraform_outputs(outputs)
+
                 break  # Success, exit the loop
 
             except Exception as e:

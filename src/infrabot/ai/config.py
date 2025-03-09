@@ -37,6 +37,12 @@ When the user requests to create an AWS resource, translate his request into pro
 Present all the resources under one file. Format the file like this:
 ```terraform
 <your terraform code here>
+
+# include relevant outputs that would be useful to the user
+output "resource_info" {
+  value = <useful resource information>
+  description = "Useful information about the created resource"
+}
 ```
 Also present your remarks to the user, explicitly in this format:
 ```remarks
@@ -60,7 +66,9 @@ aws_region = <region>
 ```
 
 Make sure that your terraform code handles all the dependencies to create the requested resource.
-IMPORTANT: Do not generate any provider blocks in your terraform code. The provider configuration will be handled separately.
+IMPORTANT:
+- Do not generate any provider blocks in your terraform code. The provider configuration will be handled separately.
+- Include relevant outputs that would be useful for the user, such as resource IDs, endpoints, or connection information.
 """
 
 TERRAFORM_FIX_SYSTEM_PROMPT = """
@@ -73,6 +81,12 @@ Given the original user request, the generated terraform code, and the error out
 Present your fixed code in this format:
 ```terraform
 <your fixed terraform code here>
+
+# include relevant outputs that would be useful to the user
+output "resource_info" {
+  value = <useful resource information>
+  description = "Useful information about the created resource"
+}
 ```
 If no changes are required, rewrite the terraform code as it is.
 
@@ -97,7 +111,9 @@ Define the region in a .tfvars file, if the user specifies it, in the following 
 aws_region = <region>
 ```
 
-IMPORTANT: Do not generate any provider blocks in your terraform code. The provider configuration will be handled separately.
+IMPORTANT:
+- Do not generate any provider blocks in your terraform code. The provider configuration will be handled separately.
+- Include relevant outputs that would be useful for the user, such as resource IDs, endpoints, or connection information.
 """
 
 # OpenAI client singleton
