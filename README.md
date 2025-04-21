@@ -221,3 +221,195 @@ Each provider requires its own API key to be set as an environment variable. Com
 - `AZURE_API_KEY` for Azure OpenAI models
 
 Refer to the [LiteLLM documentation](https://docs.litellm.ai/docs/) for the complete list of supported models and their corresponding environment variables.
+
+# InfraBot API Documentation
+
+## Overview
+
+InfraBot is a service that allows you to create and manage infrastructure components using natural language. It leverages AI to convert your text prompts into Terraform code, which can then be used to provision cloud resources.
+
+This documentation is specifically for frontend developers who need to integrate with the InfraBot API.
+
+## Running the InfraBot Server
+
+To run the InfraBot server, use the following command:
+
+```bash
+uvicorn infrabot.service:app --host 127.0.0.1 --port 8000
+```
+
+### Environment Configuration
+
+Before running the server, ensure you have set up the required environment variables:
+
+```bash
+# Required
+export OPENAI_API_KEY='your_api_key_here'
+
+# Optional (for alternative models)
+export GROQ_API_KEY='your_api_key'  # If using Groq models
+export PERPLEXITY_API_KEY='your_api_key'  # If using Perplexity models
+export ANTHROPIC_API_KEY='your_api_key'  # If using Anthropic models
+
+# Optional (for monitoring)
+export LANGFUSE_PUBLIC_KEY='your_public_key'
+export LANGFUSE_SECRET_KEY='your_secret_key'
+```
+
+## Docker Usage
+
+You can also run InfraBot as a Docker container:
+
+```bash
+docker run -p 8000:8000 \
+  -e OPENAI_API_KEY=your_openai_api_key \
+  -e AWS_ACCESS_KEY_ID=your_aws_access_key \
+  -e AWS_SECRET_ACCESS_KEY=your_aws_secret_key \
+  -e AWS_REGION=your_preferred_region \
+  alaeddineabdessalem/infrabot
+```
+
+The server will be accessible at `http://localhost:8000`.
+
+## API Endpoints
+
+The InfraBot service exposes the following RESTful API endpoints:
+
+### 1. Initialize a Project
+
+Initialize a new InfraBot project with Terraform configuration.
+
+**Endpoint:** `POST /init`
+
+**Request Body:**
+```json
+{
+  "workdir": ".infrabot/default",  // Working directory for the project (optional)
+  "verbose": false,                // Show detailed initialization steps (optional)
+  "local": false                   // Use localstack for infrastructure (optional)
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Project initialized successfully",
+  "workdir": ".infrabot/default"
+}
+```
+
+### 2. Create Infrastructure Component
+
+Create a new infrastructure component based on a natural language prompt.
+
+**Endpoint:** `POST /component/create`
+
+**Request Body:**
+```json
+{
+  "prompt": "Create an S3 bucket with versioning enabled",  // Required: Natural language description
+  "name": "main",                                           // Component name (optional)
+  "model": "gpt-4o",                                        // AI model to use (optional)
+  "self_healing": false,                                    // Auto-fix terraform errors (optional)
+  "max_attempts": 3,                                        // Max healing attempts (optional)
+  "keep_on_failure": false,                                 // Keep files if error occurs (optional)
+  "langfuse_session_id": null,                              // Session ID for tracking (optional)
+  "workdir": ".infrabot/default"                            // Working directory (optional)
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "error_message": "",
+  "component_name": "main",
+  "terraform_code": "resource \"aws_s3_bucket\" \"example\" { ... }",
+  "tfvars_code": "bucket_name = \"my-example-bucket\"",
+  "plan_summary": "1 resource to add, 0 to change, 0 to destroy",
+  "outputs": {
+    "bucket_name": "my-example-bucket",
+    "bucket_arn": "arn:aws:s3:::my-example-bucket"
+  },
+  "self_healing_attempts": 0,
+  "fixed_errors": []
+}
+```
+
+### 3. List Projects
+
+List all InfraBot projects in a specified directory.
+
+**Endpoint:** `GET /projects`
+
+**Query Parameters:**
+- `parent_dir` (optional): Directory to scan for InfraBot projects. Default is "."
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Found 2 InfraBot projects",
+  "projects": [
+    "/path/to/project1",
+    "/path/to/project2"
+  ]
+}
+```
+
+## Usage Examples
+
+### Example: Using curl
+
+#### Initialize a Project
+
+```bash
+curl -X POST "http://localhost:8000/init" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workdir": "service_test/.infrabot/default",
+    "verbose": true
+  }'
+```
+
+#### Create an Infrastructure Component
+
+```bash
+curl -X POST "http://localhost:8000/component/create" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Create an S3 bucket called demo-bucket",
+    "name": "demo-s3-bucket",
+    "model": "perplexity/sonar-pro",
+    "self_healing": true,
+    "max_attempts": 3,
+    "keep_on_failure": true,
+    "workdir": "
+    service_test/.infrabot/default"
+  }'
+```
+
+#### List All Projects
+
+```bash
+curl -X GET "http://localhost:8000/projects?parent_dir=./"
+```
+
+## Error Handling
+
+The API returns appropriate HTTP status codes and error messages:
+
+- `200 OK`: The request was successful
+- `400 Bad Request`: The request was invalid (check the error message)
+- `500 Internal Server Error`: An unexpected error occurred on the server
+
+When an error occurs, the response will include a detailed error message explaining what went wrong.
+
+## Notes for Frontend Developers
+
+1. All API endpoints accept and return JSON data.
+2. For long-running operations (like component creation), consider implementing loading states and error handling in your UI.
+3. The component creation process may take some time, especially for complex infrastructure.
+4. The `terraform_code` and `tfvars_code` fields in the response can be displayed in a code editor for review.
+5. The `plan_summary` field provides a human-readable summary of what changes would be made, which is useful for displaying to users.
