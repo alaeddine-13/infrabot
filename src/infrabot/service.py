@@ -151,6 +151,25 @@ class ComponentCreationResult:
         )
 
 
+class ListProjectsRequest(BaseModel):
+    """Request model for listing projects."""
+
+    parent_dir: str = Field(
+        default=".", description="Parent directory to scan for InfraBot projects"
+    )
+
+
+class ListProjectsResponse(BaseModel):
+    """Response model for listing projects."""
+
+    success: bool = Field(..., description="Whether the listing was successful")
+    message: str = Field(..., description="Information message")
+    projects: List[str] = Field(
+        default_factory=list,
+        description="List of directories containing InfraBot projects",
+    )
+
+
 # API endpoints
 @app.post("/init", response_model=InitProjectResponse)
 async def api_init_project(request: InitProjectRequest) -> InitProjectResponse:
@@ -204,6 +223,18 @@ async def api_create_component(
 
     # Convert to response model
     return result.to_response(request.name)
+
+
+@app.get("/projects", response_model=ListProjectsResponse)
+async def api_list_projects(parent_dir: str = ".") -> ListProjectsResponse:
+    """List all InfraBot projects in the specified directory."""
+    try:
+        request = ListProjectsRequest(parent_dir=parent_dir)
+        result = list_projects(parent_dir=request.parent_dir)
+        return result
+    except Exception as e:
+        logger.error(f"Error listing projects: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Project listing failed: {str(e)}")
 
 
 def init_project(
@@ -393,3 +424,57 @@ def create_component(
         )
 
     return result
+
+
+def list_projects(parent_dir: str = ".") -> ListProjectsResponse:
+    """
+    List all InfraBot projects in the specified directory.
+
+    A directory is considered to contain an InfraBot project if it has a .infrabot subdirectory.
+
+    Args:
+        parent_dir: Directory to scan for InfraBot projects
+
+    Returns:
+        ListProjectsResponse: Object containing the list of project directories
+    """
+    projects = []
+
+    try:
+        # Ensure parent_dir exists
+        if not os.path.isdir(parent_dir):
+            return ListProjectsResponse(
+                success=False,
+                message=f"Parent directory '{parent_dir}' does not exist or is not a directory",
+                projects=[],
+            )
+
+        # Function to check if a directory contains an InfraBot project
+        def is_infrabot_project(directory):
+            infrabot_dir = os.path.join(directory, ".infrabot")
+            return os.path.isdir(infrabot_dir)
+
+        # Check if the parent directory itself contains a project
+        if is_infrabot_project(parent_dir):
+            projects.append(os.path.abspath(parent_dir))
+
+        # Scan direct children (and optionally recurse)
+        for item in os.listdir(parent_dir):
+            item_path = os.path.join(parent_dir, item)
+
+            if os.path.isdir(item_path):
+                # Check if this directory has an .infrabot folder
+                if is_infrabot_project(item_path):
+                    projects.append(os.path.abspath(item_path))
+
+        return ListProjectsResponse(
+            success=True,
+            message=f"Found {len(projects)} InfraBot projects",
+            projects=projects,
+        )
+
+    except Exception as e:
+        logger.error(f"Error while listing projects: {str(e)}")
+        return ListProjectsResponse(
+            success=False, message=f"Failed to list projects: {str(e)}", projects=[]
+        )
