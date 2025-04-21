@@ -1,10 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import fetch from 'node-fetch';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // prefix all routes with /api
   const apiPrefix = "/api";
+
+  // InfraBot API URL
+  const INFRABOT_API_URL = process.env.INFRABOT_API_URL || "http://localhost:8000";
 
   // Initialize a project
   app.post(`${apiPrefix}/init`, async (req, res) => {
@@ -129,21 +133,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(`${apiPrefix}/projects`, async (req, res) => {
     try {
       const parentDir = req.query.parent_dir as string || ".";
-
-      // Here we would normally call the InfraBot service
-      // For now, we'll simulate a response with some mock projects
-
-      const mockProjects = [
-        `${parentDir}/production-infra`,
-        `${parentDir}/staging-infra`,
-        `${parentDir}/development-infra`
-      ];
-
-      return res.json({
-        success: true,
-        message: `Found ${mockProjects.length} InfraBot projects`,
-        projects: mockProjects
-      });
+      
+      try {
+        // Call the InfraBot API to list projects
+        const response = await fetch(`${INFRABOT_API_URL}/projects?parent_dir=${encodeURIComponent(parentDir)}`);
+        
+        if (!response.ok) {
+          throw new Error(`InfraBot API returned status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return res.json(data);
+      } catch (error: unknown) {
+        const apiError = error as Error;
+        console.error("Error calling InfraBot API:", apiError);
+        return res.status(502).json({
+          success: false,
+          message: "Failed to retrieve projects from InfraBot API",
+          error: apiError.message
+        });
+      }
     } catch (error) {
       console.error("Error listing projects:", error);
       return res.status(500).json({
