@@ -3,16 +3,22 @@ repos:
     rev: v4.5.0
     hooks:
     -   id: trailing-whitespace
+        exclude: ^webapp/
     -   id: end-of-file-fixer
+        exclude: ^webapp/
     -   id: check-yaml
+        exclude: ^webapp/
     -   id: check-added-large-files
         args: ['--maxkb=10240']
-        exclude: ^assets/demo\.gif$
+        exclude: ^(assets/demo\.gif|webapp/)
     -   id: debug-statements
+        exclude: ^webapp/
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.3.5
     hooks:
     -   id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+        exclude: ^webapp/
     -   id: ruff-format
+        exclude: ^webapp/
