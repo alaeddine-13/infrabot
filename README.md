@@ -115,7 +115,10 @@ infrabot component create --prompt "Set up an RDS instance for PostgreSQL" --nam
 infrabot chat web-server
 ```
 
-## 🗂️ Project Structure
+## 🗂️ Project Architecture
+
+![Architecture](assets/9FC88B3D-6DE0-4A4F-B798-872C17127345.png)
+
 
 When you initialize a project, InfraBot creates a `.infrabot` directory with the following structure:
 
