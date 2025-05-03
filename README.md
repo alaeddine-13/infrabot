@@ -11,8 +11,6 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
 
 Live App: https://cloud-agent-workbench-alaeddineabdess.replit.app/
 
-![QR Code](https://github.com/alaeddine-13/alaeddine-13/raw/main/frame.png)
-
 
 ## 📖 Features
 
