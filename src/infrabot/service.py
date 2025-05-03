@@ -11,6 +11,7 @@ from typing import Optional, Dict, Any, List
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
+import uvicorn
 
 from infrabot.ai.terraform_generator import (
     gen_terraform,
@@ -175,27 +176,10 @@ class ListProjectsResponse(BaseModel):
 async def api_init_project(request: InitProjectRequest) -> InitProjectResponse:
     """Initialize a new project."""
     try:
-        workdir = request.workdir or WORKDIR
-        os.makedirs(workdir, exist_ok=True)
-
-        # Copy boilerplate assets from assets/ to workdir
-        package_dir = get_package_directory("infrabot")
-        assets_dir = os.path.join(package_dir, "../../assets/terraform/")
-        copy_assets(
-            assets_dir,
-            workdir,
-            whitelist=[
-                "provider.tf" if not request.local else "provider_local.tf",
-                "backend.tf",
-            ],
-        )
-
-        # Initialize Terraform in the directory
-        terraform_wrapper = TerraformWrapper(workdir)
-        terraform_wrapper.init(verbose=request.verbose)
-
-        return InitProjectResponse(
-            success=True, message="Project initialized successfully", workdir=workdir
+        return init_project(
+            workdir=os.path.join(request.workdir, ".infrabot/default"),
+            verbose=request.verbose,
+            local=request.local,
         )
     except Exception as e:
         logger.error(f"Error initializing project: {str(e)}")
@@ -218,7 +202,7 @@ async def api_create_component(
         max_attempts=request.max_attempts,
         keep_on_failure=request.keep_on_failure,
         langfuse_session_id=request.langfuse_session_id,
-        workdir=request.workdir,
+        workdir=os.path.join(request.workdir, ".infrabot/default"),
     )
 
     # Convert to response model
@@ -251,13 +235,32 @@ def init_project(
     Returns:
         InitProjectResponse: Object containing the result of initialization
     """
-    request = InitProjectRequest(workdir=workdir, verbose=verbose, local=local)
     try:
-        return api_init_project(request)
-    except HTTPException as e:
-        return InitProjectResponse(
-            success=False, message=str(e.detail), workdir=workdir
+        workdir = workdir or WORKDIR
+        os.makedirs(workdir, exist_ok=True)
+
+        # Copy boilerplate assets from assets/ to workdir
+        package_dir = get_package_directory("infrabot")
+        assets_dir = os.path.join(package_dir, "../../assets/terraform/")
+        copy_assets(
+            assets_dir,
+            workdir,
+            whitelist=[
+                "provider.tf" if not local else "provider_local.tf",
+                "backend.tf",
+            ],
         )
+
+        # Initialize Terraform in the directory
+        terraform_wrapper = TerraformWrapper(workdir)
+        terraform_wrapper.init(verbose=verbose)
+
+        return InitProjectResponse(
+            success=True, message="Project initialized successfully", workdir=workdir
+        )
+    except Exception as e:
+        logger.error(f"Error initializing project: {str(e)}")
+        return InitProjectResponse(success=False, message=str(e), workdir=workdir)
 
 
 def create_component(
@@ -478,3 +481,8 @@ def list_projects(parent_dir: str = ".") -> ListProjectsResponse:
         return ListProjectsResponse(
             success=False, message=f"Failed to list projects: {str(e)}", projects=[]
         )
+
+
+if __name__ == "__main__":
+    # run server
+    uvicorn.run(app, host="0.0.0.0", port=8000)
