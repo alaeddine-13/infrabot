@@ -90,6 +90,9 @@ celerybeat-schedule
 .venv
 venv/
 ENV/
+testenv
+venv*
+
 
 # Spyder project settings
 .spyderproject
@@ -112,3 +115,8 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# miscellaneous
+miscellaneous
+eval
+experiments

@@ -18,6 +18,20 @@ interface Message {
   timestamp: Date;
 }
 
+// Utility to render output values nicely
+function renderOutputValue(value: any): string {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    value === null
+  ) {
+    return String(value);
+  }
+  // Pretty-print objects/arrays as JSON
+  return `<pre style=\"margin:0;\">${JSON.stringify(value, null, 2)}</pre>`;
+}
+
 export default function RightSidebar({ onCollapse }: RightSidebarProps) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([
@@ -89,7 +103,7 @@ export default function RightSidebar({ onCollapse }: RightSidebarProps) {
         responseContent += '<ul class="mt-1 space-y-1">';
 
         for (const [key, value] of Object.entries(result.outputs)) {
-          responseContent += `<li><span class="font-medium">${key}:</span> ${value}</li>`;
+          responseContent += `<li><span class="font-medium">${key}:</span> ${renderOutputValue(value)}</li>`;
         }
 
         responseContent += '</ul>';

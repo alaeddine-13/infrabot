@@ -122,7 +122,7 @@ export default function MainContent() {
                 {Object.entries(componentOutput.outputs).map(([key, value]) => (
                   <tr key={key} className="border-b border-neutral-200">
                     <td className="py-2 px-3 border border-neutral-200 font-medium">{key}</td>
-                    <td className="py-2 px-3 border border-neutral-200 font-mono">{String(value)}</td>
+                    <td className="py-2 px-3 border border-neutral-200 font-mono">{renderOutputValue(value)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -131,5 +131,19 @@ export default function MainContent() {
         )}
       </div>
     );
+  }
+
+  // Utility to render output values nicely
+  function renderOutputValue(value: any): JSX.Element | string {
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean" ||
+      value === null
+    ) {
+      return String(value);
+    }
+    // Pretty-print objects/arrays as JSON
+    return <pre style={{ margin: 0 }}>{JSON.stringify(value, null, 2)}</pre>;
   }
 }

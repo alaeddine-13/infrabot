@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import fetch from 'node-fetch';
 
 // InfraBot API URL
-const INFRABOT_API_URL = process.env.INFRABOT_API_URL || "http://localhost:8000";
+const INFRABOT_API_URL = process.env.INFRABOT_API_URL || "http://127.0.0.1:8000";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // prefix all routes with /api
