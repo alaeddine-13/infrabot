@@ -44,6 +44,17 @@ export function useInfrabot() {
       return response;
     } catch (error) {
       console.error("Error creating component:", error);
+      // Update shared state with error
+      const errorResponse: CreateComponentResponse = {
+        success: false,
+        error_message: error instanceof Error ? error.message : 'An unexpected error occurred',
+        component_name: '',
+        terraform_code: '',
+        plan_summary: '',
+        outputs: {}
+      };
+      sharedComponentOutput = errorResponse;
+      listeners.forEach(listener => listener(errorResponse));
       throw error;
     } finally {
       setIsLoading(false);

@@ -5,15 +5,19 @@ import RemixIcon from "../ui/remixicon";
 import { useInfrabot } from "@/hooks/useInfrabot";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProject } from "@/context/ProjectContext";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
+import { useState } from "react";
 
 export default function MainContent() {
   const { componentOutput } = useInfrabot();
   const { currentProject } = useProject();
+  const [error, setError] = useState<Error | null>(null);
 
   // Empty state when no project is selected or no component has been created
   if (!currentProject || !componentOutput) {
     return (
       <div className="flex-1 overflow-auto p-4 bg-neutral-50">
+        {error && <ErrorDisplay error={error} onDismiss={() => setError(null)} />}
         <div className="h-full flex flex-col items-center justify-center text-neutral-400">
           <div className="w-20 h-20 mb-4">
             <RemixIcon name="cloud-line" className="text-6xl" />
@@ -33,6 +37,7 @@ export default function MainContent() {
 
   return (
     <div className="flex-1 overflow-auto p-4 bg-neutral-50">
+      {error && <ErrorDisplay error={error} onDismiss={() => setError(null)} />}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-medium text-neutral-800">
@@ -43,6 +48,13 @@ export default function MainContent() {
               variant="outline"
               size="sm"
               className="flex items-center text-neutral-700"
+              onClick={() => {
+                try {
+                  // Add refresh logic here
+                } catch (err) {
+                  setError(err instanceof Error ? err : new Error('Failed to refresh'));
+                }
+              }}
             >
               <RemixIcon name="refresh-line" className="mr-1" /> Refresh
             </Button>
@@ -50,6 +62,13 @@ export default function MainContent() {
               variant="outline"
               size="sm"
               className="flex items-center text-neutral-700"
+              onClick={() => {
+                try {
+                  // Add export logic here
+                } catch (err) {
+                  setError(err instanceof Error ? err : new Error('Failed to export'));
+                }
+              }}
             >
               <RemixIcon name="download-line" className="mr-1" /> Export
             </Button>
@@ -102,6 +121,12 @@ export default function MainContent() {
         <h3 className="text-sm font-medium mb-3">
           Component: {componentOutput.component_name}
         </h3>
+
+        {componentOutput.error_message && (
+          <div className="mb-4 p-2 bg-red-50 border border-red-100 rounded text-red-700 text-xs">
+            <strong>Error:</strong> {componentOutput.error_message}
+          </div>
+        )}
 
         {componentOutput.plan_summary && (
           <div className="mb-4 p-2 bg-blue-50 border border-blue-100 rounded text-blue-700 text-xs">
