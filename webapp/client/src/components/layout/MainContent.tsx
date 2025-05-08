@@ -109,6 +109,13 @@ export default function MainContent() {
           </div>
         )}
 
+        {componentOutput.formatted_outputs && (
+          <div className="mb-4 p-2 bg-green-50 border border-green-100 rounded text-green-700 text-xs">
+            <strong>Formatted Outputs:</strong>
+            <div className="mt-1 whitespace-pre-wrap">{componentOutput.formatted_outputs}</div>
+          </div>
+        )}
+
         {componentOutput.outputs && Object.keys(componentOutput.outputs).length > 0 && (
           <div className="w-full overflow-x-auto">
             <table className="w-full text-xs border-collapse">
