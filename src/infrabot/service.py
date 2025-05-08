@@ -26,6 +26,7 @@ from infrabot.infra_utils.component_manager import (
 from infrabot.utils.parsing import extract_code_blocks
 from infrabot.ai.summary import summarize_terraform_plan
 from infrabot.utils.os import get_package_directory, copy_assets
+from infrabot.ai.output_format import ai_format_output
 
 logger = logging.getLogger("infrabot.service")
 WORKDIR = ".infrabot/default"
@@ -111,6 +112,9 @@ class ComponentCreationResponse(BaseModel):
     outputs: Dict[str, Any] = Field(
         default_factory=dict, description="Terraform outputs"
     )
+    formatted_outputs: str = Field(
+        default="", description="Formatted Terraform outputs in markdown"
+    )
     self_healing_attempts: int = Field(
         default=0, description="Number of self-healing attempts"
     )
@@ -131,6 +135,7 @@ class ComponentCreationResult:
         self.plan_summary = ""
         self.apply_output = ""
         self.outputs = {}
+        self.formatted_outputs = ""
         self.self_healing_attempts = 0
         self.fixed_errors = []
 
@@ -144,6 +149,7 @@ class ComponentCreationResult:
             tfvars_code=self.tfvars_code,
             plan_summary=self.plan_summary,
             outputs=self.outputs,
+            formatted_outputs=self.formatted_outputs,
             self_healing_attempts=self.self_healing_attempts,
             fixed_errors=[
                 ErrorInfo(attempt=e["attempt"], error=e["error"])
@@ -364,6 +370,9 @@ def create_component(
                 # Get outputs
                 outputs = terraform_wrapper.get_outputs()
                 result.outputs = outputs
+
+                # Format outputs using AI
+                result.formatted_outputs = ai_format_output(outputs)
 
                 # Mark as successful
                 result.success = True
