@@ -5,7 +5,7 @@ import RemixIcon from "../ui/remixicon";
 import { useProject } from "@/context/ProjectContext";
 import { useToast } from "@/hooks/use-toast";
 import { useInfrabot } from "@/hooks/useInfrabot";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface RightSidebarProps {
   onCollapse: () => void;
@@ -169,8 +169,9 @@ export default function RightSidebar({ onCollapse }: RightSidebarProps) {
       </div>
 
       {/* Chat messages area */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1">
+        <ScrollBar orientation="horizontal" />
+        <div className="space-y-4 p-4">
           {messages.map((msg) => (
             <div key={msg.id} className="flex items-start space-x-2">
               <div
@@ -183,9 +184,10 @@ export default function RightSidebar({ onCollapse }: RightSidebarProps) {
                 <RemixIcon name={msg.sender === "agent" ? "robot-line" : "user-line"} />
               </div>
               <div
-                className={`rounded-lg p-3 text-sm max-w-[85%] ${
+                className={`rounded-lg p-3 text-sm overflow-x-auto whitespace-pre-wrap break-words ${
                   msg.sender === "agent" ? "bg-neutral-100" : "bg-primary-50"
                 }`}
+                style={{ minWidth: 0, maxWidth: 'calc(100% - 2rem)' }}
                 dangerouslySetInnerHTML={{ __html: msg.content }}
               ></div>
             </div>
