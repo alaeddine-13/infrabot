@@ -156,8 +156,8 @@ export default function LeftSidebar({ onCollapse }: LeftSidebarProps) {
                         </span>
                       </div>
                     </div>
-                    <div className="text-xs text-neutral-500 mt-1 truncate">
-                      {project}
+                    <div className="text-xs text-neutral-500 mt-1 truncate" key={project}>
+                      
                     </div>
                   </div>
                 );
