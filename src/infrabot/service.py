@@ -7,6 +7,7 @@ import os
 import re
 import logging
 import uuid
+import base64
 from typing import Optional, Dict, Any, List
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
@@ -27,6 +28,7 @@ from infrabot.utils.parsing import extract_code_blocks
 from infrabot.ai.summary import summarize_terraform_plan
 from infrabot.utils.os import get_package_directory, copy_assets
 from infrabot.ai.output_format import ai_format_output
+from infrabot.ai.diagram_generator import generate_diagram
 
 logger = logging.getLogger("infrabot.service")
 WORKDIR = ".infrabot/default"
@@ -121,6 +123,9 @@ class ComponentCreationResponse(BaseModel):
     fixed_errors: List[ErrorInfo] = Field(
         default_factory=list, description="Errors that were fixed during self-healing"
     )
+    diagram: Optional[str] = Field(
+        default=None, description="Base64 encoded infrastructure diagram"
+    )
 
 
 class ComponentCreationResult:
@@ -138,6 +143,7 @@ class ComponentCreationResult:
         self.formatted_outputs = ""
         self.self_healing_attempts = 0
         self.fixed_errors = []
+        self.diagram = None
 
     def to_response(self, component_name: str) -> ComponentCreationResponse:
         """Convert to API response."""
@@ -155,6 +161,7 @@ class ComponentCreationResult:
                 ErrorInfo(attempt=e["attempt"], error=e["error"])
                 for e in self.fixed_errors
             ],
+            diagram=self.diagram,
         )
 
 
@@ -373,6 +380,24 @@ def create_component(
 
                 # Format outputs using AI
                 result.formatted_outputs = ai_format_output(outputs)
+
+                # Generate diagram if enabled
+                if os.getenv("GENERATE_DIAGRAM", "false").lower() == "true":
+                    try:
+                        # Generate diagram in a temporary file
+                        temp_diagram_path = os.path.join(workdir, f"{name}_diagram.jpg")
+                        generate_diagram(
+                            terraform_code, temp_diagram_path, session_id=session_id
+                        )
+
+                        # Convert diagram to base64
+                        with open(temp_diagram_path, "rb") as f:
+                            result.diagram = base64.b64encode(f.read()).decode()
+
+                        # Clean up temporary file
+                        os.remove(temp_diagram_path)
+                    except Exception as e:
+                        logger.warning(f"Failed to generate diagram: {str(e)}")
 
                 # Mark as successful
                 result.success = True
