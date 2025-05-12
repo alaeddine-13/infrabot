@@ -18,6 +18,13 @@ interface Message {
   timestamp: Date;
 }
 
+// Loading messages to cycle through
+const LOADING_MESSAGES = [
+  "Loading...",
+  "Generating infrastructure configuration...",
+  "Creating infrastructure..."
+];
+
 // Utility to render output values nicely
 function renderOutputValue(value: any): string {
   if (
@@ -44,6 +51,7 @@ export default function RightSidebar({ onCollapse }: RightSidebarProps) {
       timestamp: new Date(),
     },
   ]);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   const { toast } = useToast();
   const { currentProject, isInitialized } = useProject();
@@ -55,6 +63,21 @@ export default function RightSidebar({ onCollapse }: RightSidebarProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Handle loading message animation
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isLoading) {
+      interval = setInterval(() => {
+        setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+      }, 5000); // Change message every 5 seconds
+    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isLoading]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,6 +215,16 @@ export default function RightSidebar({ onCollapse }: RightSidebarProps) {
               ></div>
             </div>
           ))}
+          {isLoading && (
+            <div className="flex items-start space-x-2">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary-100 text-primary-600">
+                <RemixIcon name="robot-line" />
+              </div>
+              <div className="rounded-lg p-3 text-sm bg-neutral-100 animate-pulse">
+                {LOADING_MESSAGES[loadingMessageIndex]}
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
