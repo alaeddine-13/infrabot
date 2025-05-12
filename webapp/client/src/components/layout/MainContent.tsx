@@ -81,6 +81,7 @@ export default function MainContent() {
               <TabsList className="border-0">
                 <TabsTrigger value="output">Output</TabsTrigger>
                 <TabsTrigger value="terraform">Terraform Code</TabsTrigger>
+                <TabsTrigger value="diagram">Diagram</TabsTrigger>
               </TabsList>
             </div>
 
@@ -96,6 +97,22 @@ export default function MainContent() {
               ) : (
                 <Alert>
                   <AlertDescription>No Terraform code available.</AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+
+            <TabsContent value="diagram" className="p-4">
+              {componentOutput?.diagram ? (
+                <div className="flex justify-center items-center">
+                  <img 
+                    src={`data:image/jpeg;base64,${componentOutput.diagram}`}
+                    alt="Infrastructure Diagram"
+                    className="max-w-full h-auto rounded-lg shadow-lg"
+                  />
+                </div>
+              ) : (
+                <Alert>
+                  <AlertDescription>No infrastructure diagram available.</AlertDescription>
                 </Alert>
               )}
             </TabsContent>

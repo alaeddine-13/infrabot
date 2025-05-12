@@ -378,7 +378,6 @@ def create_component(
                 outputs = terraform_wrapper.get_outputs()
                 result.outputs = outputs
 
-                # Format outputs using AI
                 result.formatted_outputs = ai_format_output(outputs)
 
                 # Generate diagram if enabled
