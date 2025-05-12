@@ -25,6 +25,10 @@ version = "0.1.0"
 description = "Create resource on the cloud with natural language"
 authors = ["Alaeddine Abdessalem <alaeddine.abdessalem@gmail.com>"]
 packages = [{include = "infrabot", from = "src"}]
+include = [
+    {path = "assets/terraform", format = "sdist"},
+    {path = "assets/terraform", format = "wheel"}
+]
 
 [tool.poetry.dependencies]
 python = "<4.0,>3.10"  # Replace with your Python version
