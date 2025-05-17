@@ -49,6 +49,39 @@ P.S, make sure to configure the default region as well.
   docker run -d -p 4566:4566 localstack/localstack
   ```
 
+## 🐳 Docker Deployment
+
+You can run InfraBot UI using Docker with a single command. This is the recommended way to get started quickly:
+
+```bash
+docker run -p 8000:8000 -p 5000:5000 \
+  -e AWS_ACCESS_KEY_ID=<your_aws_access_key> \
+  -e AWS_SECRET_ACCESS_KEY=<your_aws_secret_key> \
+  -e AWS_REGION=<your_aws_region> \
+  -e PERPLEXITY_API_KEY=<your_perplexity_api_key> \
+  -e OPENAI_API_KEY=<your_openai_api_key> \
+  --platform linux/amd64 alaeddineabdessalem/infrabot:latest
+```
+
+### Required Environment Variables
+
+- `AWS_ACCESS_KEY_ID`: Your AWS access key
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+- `AWS_REGION`: Your AWS region (e.g., us-east-1)
+- `PERPLEXITY_API_KEY`: Your Perplexity API key (recommended for better infrastructure generation)
+- `OPENAI_API_KEY`: Your OpenAI API key (required for auxiliary tasks)
+
+### Ports
+
+- `8000`: Main InfraBot UI
+- `5000`: Additional services
+
+### Notes
+
+- The Docker image is built for linux/amd64 platform
+- It's recommended to use both Perplexity API and OpenAI API for optimal performance
+- The container includes all necessary dependencies and Terraform
+
 ## 📚 Command Structure
 
 Initialize a new project:
