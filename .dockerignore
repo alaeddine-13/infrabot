@@ -93,7 +93,6 @@ ENV/
 testenv
 venv*
 
-
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -111,6 +110,7 @@ venv*
 .vscode/
 .idea/
 node_modules/
+webapp/node_modules/
 /test-results/
 /playwright-report/
 /blob-report/
@@ -120,3 +120,10 @@ node_modules/
 miscellaneous
 eval
 experiments
+
+# Docker specific ignores
+Dockerfile
+docker-compose*.yml
+.git
+.github
+.gitignore

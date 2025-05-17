@@ -1,6 +1,6 @@
 """Configuration for AI services."""
 
-from typing import Dict
+from typing import Dict, Any
 import os
 from openai import OpenAI
 
@@ -28,6 +28,16 @@ MODEL_CONFIG: Dict[str, Dict] = {
         "temperature": 0.5,
     },
     "chat": {"model": "gpt-4o", "temperature": 0.7, "max_tokens": 1000},
+    "output_format": {
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.3,
+        "max_tokens": 500,
+    },
+    "diagram": {
+        "model": "perplexity/sonar",  # Using gpt-4o for better code generation
+        "temperature": 0.3,
+        "max_tokens": 1000,
+    },
 }
 
 # Prompts
@@ -116,6 +126,17 @@ IMPORTANT:
 - Include relevant outputs that would be useful for the user, such as resource IDs, endpoints, or connection information.
 """
 
+OUTPUT_FORMAT_SYSTEM_PROMPT = """You are a technical documentation expert who specializes in formatting infrastructure outputs in markdown."""
+
+OUTPUT_FORMAT_USER_PROMPT = """Please format the following Terraform outputs into a clear, well-structured markdown document.
+Include a title, descriptions for each output, and organize them in a logical way.
+Here are the outputs to format:
+
+{outputs}
+
+Format the response as markdown with appropriate headers, lists, and code blocks where needed.
+Focus on making the information clear and easy to understand for users."""
+
 # OpenAI client singleton
 _client = None
 
@@ -131,3 +152,51 @@ def get_openai_client() -> OpenAI:
         else:
             _client = OpenAI()
     return _client
+
+
+def ai_format_output(outputs: Dict[str, Any]) -> str:
+    """
+    Format Terraform outputs into a markdown string using LLM.
+
+    Args:
+        outputs: Dictionary of Terraform outputs to format
+
+    Returns:
+        str: Formatted markdown string
+    """
+    if not outputs:
+        return "No outputs available."
+
+    client = get_openai_client()
+    config = MODEL_CONFIG["output_format"]
+
+    # Create a prompt that asks for markdown formatting
+    prompt = f"""Please format the following Terraform outputs into a clear, well-structured markdown document.
+Include a title, descriptions for each output, and organize them in a logical way.
+Here are the outputs to format:
+
+{outputs}
+
+Format the response as markdown with appropriate headers, lists, and code blocks where needed.
+Focus on making the information clear and easy to understand for users."""
+
+    try:
+        response = client.chat.completions.create(
+            model=config["model"],
+            temperature=config["temperature"],
+            max_tokens=config["max_tokens"],
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a technical documentation expert who specializes in formatting infrastructure outputs in markdown.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+        )
+        return response.choices[0].message.content
+    except Exception:
+        # Fallback to simple formatting if LLM call fails
+        formatted = "# Terraform Outputs\n\n"
+        for key, value in outputs.items():
+            formatted += f"## {key}\n```\n{value}\n```\n\n"
+        return formatted
