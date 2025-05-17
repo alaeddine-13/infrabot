@@ -9,8 +9,6 @@ Create resource on the cloud with natural language using AI-powered Terraform ge
 ![Demo](assets/demo.gif)
 
 
-Live App: https://cloud-agent-workbench-alaeddineabdess.replit.app/
-
 
 ## 📖 Features
 
@@ -21,6 +19,23 @@ Live App: https://cloud-agent-workbench-alaeddineabdess.replit.app/
 * Interactive chat interface for cloud resources
 * Support for multiple infrastructure components
 * Self-healing infrastructure creation with automatic error fixing
+
+## 🖥️ User Interface
+
+InfraBot provides a modern, intuitive web interface that makes infrastructure management simple and accessible:
+
+### Main Features
+- **Natural Language Input**: Simply describe your desired infrastructure in plain English
+- **Real-time Feedback**: See your infrastructure being generated and deployed in real-time
+- **Interactive Chat**: Get instant answers about your infrastructure through the built-in chat interface
+- **Component Management**: Easily view, edit, and manage all your infrastructure components
+- **Visual Feedback**: Clear status indicators and progress tracking for all operations
+- **Error Handling**: Intuitive error messages with suggested fixes
+
+### Demo Video
+Check out our demo video to see InfraBot in action:
+
+[![InfraBot Demo](assets/infrabot-demo.mov)](assets/infrabot-demo.mov)
 
 ## 🛠️ Prerequisites
 
