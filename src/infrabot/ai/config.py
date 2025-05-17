@@ -34,7 +34,7 @@ MODEL_CONFIG: Dict[str, Dict] = {
         "max_tokens": 500,
     },
     "diagram": {
-        "model": "gpt-4o",  # Using gpt-4o for better code generation
+        "model": "perplexity/sonar",  # Using gpt-4o for better code generation
         "temperature": 0.3,
         "max_tokens": 1000,
     },

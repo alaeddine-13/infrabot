@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     unzip \
     gnupg \
+    graphviz \
     && rm -rf /var/lib/apt/lists/*
 
 # Install AWS CLI
@@ -55,6 +56,7 @@ RUN pip install --no-cache-dir poetry && \
 
 # Install the project
 RUN pip install --no-cache-dir "."
+RUN pip install langfuse
 
 # Make the start_server script executable
 RUN chmod +x /app/scripts/start_server.sh
@@ -64,6 +66,7 @@ EXPOSE 8000
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV GENERATE_DIAGRAM=true
 
 # Install supervisord
 RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
