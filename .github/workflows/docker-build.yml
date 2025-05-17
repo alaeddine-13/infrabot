@@ -25,17 +25,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract branch name
-        shell: bash
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ${{ env.DOCKER_IMAGE }}:${{ env.BRANCH_NAME }}
-            ${{ env.BRANCH_NAME == 'main' && format('{0}:latest', env.DOCKER_IMAGE) || '' }}
+            ${{ env.DOCKER_IMAGE }}:${{ github.ref_name }}
+            ${{ github.ref_name == 'main' && format('{0}:latest', env.DOCKER_IMAGE) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
